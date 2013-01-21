@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+
+var hlsdump = require('commander');
+hlsdump.version('0.0.0')
+   .usage('[options] <url>')
+   .option('-o, --output <path>', 'target file')
+   .option('-u, --udp [host:port]', 'relay TS over UDP', function(val) {
+     var r = { host:'localhost', port:1234 };
+     if (val) {
+       var s = val.split(':');
+       if (s.length === 1) {
+         r.port = parseInt(s[0], 10);
+       } else {
+         r.host = s[0];
+         r.port = parseInt(s[1], 10);
+       }
+     }
+     return r;
+   })
+   .option('-s, --sync', 'clock sync using stream PCR')
+   .option('-a, --user-agent <string>', 'HTTP User-Agent')
+   .parse(process.argv);
+
+var util = require('util'),
+    url = require('url'),
+    fs = require('fs');
+
+var reader = require('../lib/reader'),
+    tslimit = require('../lib/tslimit'),
+    tsblast = require('../lib/tsblast');
+
+var src = process.argv[2];
+if (!src) return hlsdump.help();
+
+var r = reader(src);
+
+var time = 0;
+r.on('segment', function(seqNo, duration, meta) {
+//  console.error(new Date().toJSON() + sep + meta.size + sep + duration.toFixed(3) + sep + (meta.size / (duration * 1024/8)).toFixed(3));
+  console.error('new segment at '+time.toFixed(0)+' seconds, avg bitrate (kbps):', (meta.size / (duration * 1024/8)).toFixed(1));
+  time += duration;
+});
+
+r.on('end', function() {
+  console.error('done');
+});
+
+var stream = r;
+if (hlsdump.sync)
+  stream = stream.pipe(tslimit());
+
+if (hlsdump.udp)
+  stream.pipe(tsblast(1234));
+
+if (hlsdump.output) {
+  var dst;
+  if (hlsdump.output === '-')
+    dst = process.stdout;
+  else
+    dst = fs.createWriteStream(hlsdump.output);
+
+  if (dst)
+    stream.pipe(dst);
+}
