@@ -10,6 +10,10 @@
   "directories": {
     "test": "test"
   },
+	"bin": {
+		"hlsdump": "./bin/hlsdump",
+		"hlsmon": "./bin/hlsmon"
+	},
   "repository": {
 		"type" : "git", "url": "http://github.com/kanongil/node-hls-tools.git"
 	},
