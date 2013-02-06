@@ -15,7 +15,7 @@ var src = process.argv[2];
 var sep = ';';
 
 function monitor(srcUrl) {
-  var r = reader(srcUrl, {noData:true});
+  var r = reader(srcUrl, {noData:true, keepConnection:true});
 
   var time = 0;
   r.on('segment', function(seqNo, duration, file) {
