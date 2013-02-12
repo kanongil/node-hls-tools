@@ -28,7 +28,7 @@ var util = require('util'),
     fs = require('fs');
 
 var reader = require('../lib/reader'),
-    tslimit = require('../lib/tslimit'),
+    tssmooth = require('../lib/tslimit'),
     tsblast = require('../lib/tsblast');
 
 var src = process.argv[2];
@@ -53,7 +53,7 @@ r.on('end', function() {
 
 var stream = r;
 if (hlsdump.sync)
-  stream = stream.pipe(tslimit());
+  stream = stream.pipe(tssmooth());
 
 if (hlsdump.udp)
   stream.pipe(tsblast(hlsdump.udp));
