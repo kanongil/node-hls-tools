@@ -56,7 +56,7 @@ r.on('end', function() {
 
 var stream = r;
 if (hlsdump.sync)
-  stream = stream.pipe(tssmooth());
+  stream = stream.pipe(tssmooth(), {chunkSize:16*1024});
 
 if (hlsdump.udp)
   stream.pipe(tsblast(hlsdump.udp));
