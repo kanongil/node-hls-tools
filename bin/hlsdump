@@ -17,6 +17,7 @@ hlsdump.version('0.0.0')
      }
      return r;
    })
+   .option('-b, --prebuffer-size <bytes>', 'prebuffer <bytes> input data before output (implies -s)')
    .option('-s, --sync', 'clock sync using stream PCR')
    .option('-k, --keep-connection', 'don\'t give up once connected')
    .option('-f, --full-stream', 'fetch all stream data')
@@ -34,7 +35,9 @@ var reader = require('../lib/reader'),
 var src = process.argv[2];
 if (!src) return hlsdump.help();
 
-var r = reader(src, {keepConnection:hlsdump.keepConnection, fullStream:hlsdump.fullStream});
+if (hlsdump.prebufferSize) hlsdump.sync = true;
+
+var r = reader(src, {prebufferSize:hlsdump.prebufferSize/*, bufferSize:10000*/, keepConnection:hlsdump.keepConnection, fullStream:hlsdump.fullStream});
 
 var time = 0;
 r.on('segment', function(seqNo, duration, meta) {
