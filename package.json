@@ -24,7 +24,7 @@
     "carrier": "~0.1.8",
     "commander": "~1.1.1",
     "async": "~0.1.22",
-    "readable-stream": "git+https://github.com/isaacs/readable-stream.git",
+    "readable-stream": "~0.3.0",
     "http-get": "~0.5.2"
   },
   "devDependencies": {
