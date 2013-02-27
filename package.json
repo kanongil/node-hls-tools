@@ -2,21 +2,26 @@
   "name": "hls-tools",
   "version": "0.0.0",
   "description": "HTTP Live Streaming (HLS) tools",
-  "keywords": ["hls", "m3u8", "streaming"],
-	"main": "index.js",
+  "keywords": [
+    "hls",
+    "m3u8",
+    "streaming"
+  ],
+  "main": "index.js",
   "scripts": {
     "test": "mocha -R list"
   },
   "directories": {
     "test": "test"
   },
-	"bin": {
-		"hlsdump": "./bin/hlsdump",
-		"hlsmon": "./bin/hlsmon"
-	},
+  "bin": {
+    "hlsdump": "./bin/hlsdump",
+    "hlsmon": "./bin/hlsmon"
+  },
   "repository": {
-		"type" : "git", "url": "http://github.com/kanongil/node-hls-tools.git"
-	},
+    "type": "git",
+    "url": "http://github.com/kanongil/node-hls-tools.git"
+  },
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD",
   "dependencies": {
@@ -25,7 +30,7 @@
     "commander": "~1.1.1",
     "async": "~0.1.22",
     "readable-stream": "~0.3.0",
-    "http-get": "~0.5.2"
+    "http-get": "git+https://github.com/kanongil/http-get.git#stream-error-fix"
   },
   "devDependencies": {
     "mocha": "~1.7.4",
