@@ -28,7 +28,6 @@
     "debug": "~0.7.0",
     "carrier": "~0.1.8",
     "commander": "~1.1.1",
-    "async": "~0.1.22",
     "readable-stream": "~0.3.0",
     "http-get": "git+https://github.com/kanongil/http-get.git#stream-error-fix"
   },
