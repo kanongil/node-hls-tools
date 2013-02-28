@@ -29,7 +29,7 @@
     "carrier": "~0.1.8",
     "commander": "~1.1.1",
     "readable-stream": "~0.3.0",
-    "http-get": "git+https://github.com/kanongil/http-get.git#stream-error-fix"
+    "request": "~2.14.0"
   },
   "devDependencies": {
     "mocha": "~1.7.4",
