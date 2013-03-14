@@ -17,7 +17,10 @@ hlsdump.version('0.0.0')
      }
      return r;
    })
-   .option('-b, --buffer-size <bytes>', 'try to buffer <bytes> of input data (implies -s)')
+   .option('-b, --buffer-size <bytes>|full', 'try to buffer <bytes> of input data (implies -s)', function(val) {
+     if (val === 'full') return 0x80000000-1;
+     return parseInt(val, 0);
+   })
    .option('-s, --sync', 'clock sync using stream PCR')
    .option('-k, --keep-connection', 'don\'t give up once connected')
    .option('-f, --full-stream', 'fetch all stream data')
