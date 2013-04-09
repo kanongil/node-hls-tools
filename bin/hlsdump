@@ -60,13 +60,20 @@ r.on('readable', function() {
     if (obj) {
       var meta = obj.meta;
       var duration = obj.segment.duration;
-      console.error('new segment at '+time.toFixed(0)+' seconds, avg bitrate (kbps):', (meta.size / (duration * 1024/8)).toFixed(1));
+      var size = meta.size;
       time += duration;
 
       reading = true;
       obj.stream.pipe(buffer, { end: false });
+      if (size === -1) {
+        size = 0;
+        obj.stream.on('data', function(chunk) {
+          size += chunk.length;
+        });
+      }
       oncemore(obj.stream).once('end', 'error', function(err) {
         reading = false;
+        console.error('segment done at '+time.toFixed(0)+' seconds, avg bitrate (kbps):', (size / (duration * 1024/8)).toFixed(1));
         if (err) console.error('stream error', err.stack || err);
         grabnext();
       });
