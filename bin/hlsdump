@@ -65,16 +65,19 @@ r.on('readable', function() {
 
       reading = true;
       obj.stream.pipe(buffer, { end: false });
-      if (size === -1) {
+      if (size === -1 || !hooked) {
         size = 0;
         obj.stream.on('data', function(chunk) {
           size += chunk.length;
+          if (!hooked && size >= hlsdump.bufferSize)
+            hook(buffer);
         });
       }
       oncemore(obj.stream).once('end', 'error', function(err) {
         reading = false;
         console.error('segment done at '+time.toFixed(0)+' seconds, avg bitrate (kbps):', (size / (duration * 1024/8)).toFixed(1));
         if (err) console.error('stream error', err.stack || err);
+        else hook(buffer);
         grabnext();
       });
     }
@@ -95,20 +98,29 @@ r.on('end', function() {
 });
 
 var buffer = new Passthrough({highWaterMark:hlsdump.bufferSize});
-var stream = buffer;
-if (hlsdump.sync)
-  stream = stream.pipe(tssmooth());
+var hooked = false;
+function hook(stream) {
+  if (hooked) return;
 
-if (hlsdump.udp)
-  stream.pipe(tsblast(hlsdump.udp));
+  if (hlsdump.sync)
+    stream = stream.pipe(tssmooth());
 
-if (hlsdump.output) {
-  var dst;
-  if (hlsdump.output === '-')
-    dst = process.stdout;
-  else
-    dst = fs.createWriteStream(hlsdump.output);
+  if (hlsdump.udp)
+    stream.pipe(tsblast(hlsdump.udp));
 
-  if (dst)
-    stream.pipe(dst);
+  if (hlsdump.output) {
+    var dst;
+    if (hlsdump.output === '-')
+      dst = process.stdout;
+    else
+      dst = fs.createWriteStream(hlsdump.output);
+
+    if (dst)
+      stream.pipe(dst);
+  }
+
+  hooked = true;
 }
+
+if (!hlsdump.sync)
+  hook(buffer);
