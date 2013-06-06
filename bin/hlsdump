@@ -43,7 +43,7 @@ try {
   var Passthrough = require('readable-stream/passthrough');
 }
 
-var src = process.argv[2];
+var src = hlsdump.args[0];
 if (!src) return hlsdump.help();
 
 if (hlsdump.bufferSize) hlsdump.sync = true;
