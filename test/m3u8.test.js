@@ -90,6 +90,24 @@ describe('M3U8Playlist', function() {
     })
   })
 
+  describe('#isValidSeqNo()', function() {
+    it('should return false for early numbers', function() {
+      testIndex.isValidSeqNo(-1000).should.be.false;
+      testIndex.isValidSeqNo(0).should.be.false;
+      testIndex.isValidSeqNo("100").should.be.false;
+    })
+    it('should return false for future numbers', function() {
+      testIndex.isValidSeqNo(10000).should.be.false;
+      testIndex.isValidSeqNo("10000").should.be.false;
+    })
+    it('should return true for numbers in range', function() {
+      testIndex.isValidSeqNo(7794).should.be.true;
+      testIndex.isValidSeqNo("7795").should.be.true;
+      testIndex.isValidSeqNo(7796).should.be.true;
+      testIndex.isValidSeqNo(7797).should.be.true;
+    })
+  })
+
   describe('#getSegment()', function() {
     it('should return segment data for valid sequence numbers', function() {
       testIndex.getSegment(7794).should.be.an.instanceof(m3u8.M3U8Segment);
