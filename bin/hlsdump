@@ -98,28 +98,53 @@ r.on('end', function() {
 });
 
 var buffer = new Passthrough({highWaterMark:hlsdump.bufferSize});
+var outputs = [];
+
+if (hlsdump.udp)
+  outputs.push(tsblast(hlsdump.udp));
+
+if (hlsdump.output) {
+  if (hlsdump.output === '-')
+    outputs.push(process.stdout);
+  else
+    outputs.push(fs.createWriteStream(hlsdump.output));
+}
+
+// the hook is used to prebuffer
 var hooked = false;
 function hook(stream) {
   if (hooked) return;
 
-  if (hlsdump.sync)
-    stream = stream.pipe(tssmooth());
+  console.error('hooking output');
 
-  if (hlsdump.udp)
-    stream.pipe(tsblast(hlsdump.udp));
+  var s = stream;
+  if (hlsdump.sync) {
+    var smooth = tssmooth();
+    smooth.on('unpipe', function() {
+      this.unpipe();
+    });
+    smooth.once('error', function(err) {
+      console.error('smooth error', err);
+      unhook(stream);
 
-  if (hlsdump.output) {
-    var dst;
-    if (hlsdump.output === '-')
-      dst = process.stdout;
-    else
-      dst = fs.createWriteStream(hlsdump.output);
-
-    if (dst)
-      stream.pipe(dst);
+      smooth.on('error', function () {});
+    });
+    s = s.pipe(smooth);
   }
 
+  outputs.forEach(function (o) {
+    s.pipe(o);
+  });
+
   hooked = true;
+}
+
+function unhook(stream) {
+  if (hooked) {
+    console.error('unhooking output');
+    stream.unpipe();
+    hooked = false;
+  }
 }
 
 if (!hlsdump.sync)
