@@ -123,11 +123,8 @@ function hook(stream) {
     smooth.on('unpipe', function() {
       this.unpipe();
     });
-    smooth.once('error', function(err) {
+    smooth.on('error', function(err) {
       console.error('smooth error', err);
-      unhook(stream);
-
-      smooth.on('error', function () {});
     });
     s = s.pipe(smooth);
   }
@@ -137,14 +134,6 @@ function hook(stream) {
   });
 
   hooked = true;
-}
-
-function unhook(stream) {
-  if (hooked) {
-    console.error('unhooking output');
-    stream.unpipe();
-    hooked = false;
-  }
 }
 
 if (!hlsdump.sync)
