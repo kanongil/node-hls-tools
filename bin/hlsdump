@@ -77,7 +77,7 @@ r.on('readable', function() {
         reading = false;
         console.error('segment done at '+time.toFixed(0)+' seconds, avg bitrate (kbps):', (size / (duration * 1024/8)).toFixed(1));
         if (err) console.error('stream error', err.stack || err);
-        else hook(buffer);
+        hook(buffer);
         grabnext();
       });
     }
