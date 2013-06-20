@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+"use strict";
+
 var hlsmon = require('commander');
 hlsmon.version('0.0.0')
    .usage('[options] <url>')

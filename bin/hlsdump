@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+"use strict";
+
 var hlsdump = require('commander');
 hlsdump.version('0.0.0')
    .usage('[options] <url>')
