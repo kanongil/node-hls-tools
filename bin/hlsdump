@@ -125,8 +125,8 @@ function hook(stream) {
     smooth.on('unpipe', function() {
       this.unpipe();
     });
-    smooth.on('error', function(err) {
-      console.error('smooth error', err);
+    smooth.on('warning', function(err) {
+      console.error('smoothing error', err);
     });
     s = s.pipe(smooth);
   }
