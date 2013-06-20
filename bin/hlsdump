@@ -27,11 +27,13 @@ hlsdump.version('0.0.0')
    .option('-f, --full-stream', 'fetch all stream data')
    .option('-c, --concurrent <count>', 'fetch using concurrent connections', parseInt)
    .option('-a, --user-agent <string>', 'HTTP User-Agent')
+   .option('-i, --info-port <port>', 'report status using HTTP + json', parseInt)
    .parse(process.argv);
 
 var util = require('util'),
     url = require('url'),
-    fs = require('fs');
+    fs = require('fs'),
+    http = require('http');
 
 var reader = require('../lib/reader'),
     tssmooth = require('../lib/tssmooth'),
@@ -45,6 +47,8 @@ try {
   var Passthrough = require('readable-stream/passthrough');
 }
 
+var stats = require('measured').createCollection();
+
 var src = hlsdump.args[0];
 if (!src) return hlsdump.help();
 
@@ -52,8 +56,9 @@ if (hlsdump.bufferSize) hlsdump.sync = true;
 
 var r = reader(src, {highWaterMark:(hlsdump.concurrent || 1) - 1, fullStream:hlsdump.fullStream});
 
-var time = 0;
+var totalDuration = 0, currentSegment = -1;
 var reading = false;
+
 r.on('readable', function() {
   if (reading) return;// console.error('readable call error');
 
@@ -63,10 +68,19 @@ r.on('readable', function() {
       var meta = obj.meta;
       var duration = obj.segment.duration;
       var size = meta.size;
-      time += duration;
+      var stream = oncemore(obj.stream);
+      totalDuration += duration;
+
+      console.error('piping segment', meta.url);
+
+      var stopwatch = stats.timer('fetchTime').start();
+      stream.once('close', 'end', 'error', function(err) {
+        stopwatch.end();
+      });
 
       reading = true;
-      obj.stream.pipe(buffer, { end: false });
+      currentSegment = obj.seq;
+      stream.pipe(buffer, { end: false });
       if (size === -1 || !hooked) {
         size = 0;
         obj.stream.on('data', function(chunk) {
@@ -75,10 +89,14 @@ r.on('readable', function() {
             hook(buffer);
         });
       }
-      oncemore(obj.stream).once('end', 'error', function(err) {
+
+      stream.once('end', 'error', function(err) {
         reading = false;
-        console.error('segment done at '+time.toFixed(0)+' seconds, avg bitrate (kbps):', (size / (duration * 1024/8)).toFixed(1));
-        if (err) console.error('stream error', err.stack || err);
+        console.error('segment done at '+totalDuration.toFixed(0)+' seconds, avg bitrate (kbps):', (size / (duration * 1024/8)).toFixed(1));
+        if (err) {
+          stats.meter('streamErrors').mark();
+          console.error('stream error', err.stack || err);
+        }
         hook(buffer);
         grabnext();
       });
@@ -140,3 +158,26 @@ function hook(stream) {
 
 if (!hlsdump.sync)
   hook(buffer);
+
+// setup stat tracking
+stats.gauge('bufferBytes', function() { return buffer._readableState.length/* + buffer._writableState.length*/; });
+stats.gauge('currentSegment', function() { return currentSegment; });
+stats.gauge('index.first', function() { return r.index ? r.index.first_seq_no : -1; });
+stats.gauge('index.last', function() { return r.index ? r.index.lastSeqNo() : -1; });
+stats.gauge('totalDuration', function() { return totalDuration; });
+
+stats.meter('streamErrors');
+
+if (hlsdump.infoPort) {
+  http.createServer(function (req, res) {
+    if (req.method === 'GET') {
+      var data = JSON.stringify(stats, null, ' ');
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      });
+      res.write(data);
+    }
+    res.end();
+  }).listen(hlsdump.infoPort);
+}
