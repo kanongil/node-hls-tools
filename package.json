@@ -33,7 +33,8 @@
     "xtend": "~2.0.3",
     "deep-equal": "0.0.0",
     "measured": "~0.1.3",
-    "streamprocess": "0.0.1"
+    "streamprocess": "0.0.1",
+    "oncemore": "~0.1.0"
   },
   "devDependencies": {
     "mocha": "~1.11.0",

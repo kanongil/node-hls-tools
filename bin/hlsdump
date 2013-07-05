@@ -35,11 +35,11 @@ var util = require('util'),
     fs = require('fs'),
     http = require('http');
 
-var streamprocess = require('streamprocess');
+var streamprocess = require('streamprocess'),
+    oncemore = require('oncemore');
 var reader = require('../lib/reader'),
     tssmooth = require('../lib/tssmooth'),
-    tsblast = require('../lib/tsblast'),
-    oncemore = require('../lib/oncemore');
+    tsblast = require('../lib/tsblast');
 
 try {
   var Passthrough = require('stream').Passthrough;
