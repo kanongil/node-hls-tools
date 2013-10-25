@@ -35,7 +35,7 @@
     "measured": "~0.1.3",
     "streamprocess": "0.0.1",
     "oncemore": "~0.1.0",
-    "m3u8parse": "~0.1.0",
+    "m3u8parse": "~0.1.5",
     "mime": "~1.2.11",
     "uristream": "~0.1.0"
   },
