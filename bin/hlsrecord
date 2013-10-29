@@ -7,10 +7,11 @@
 var hlsrecord = require('commander');
 hlsrecord.version(require('../package').version)
    .usage('[options] <url>')
-   .option('-o, --output <dir>', 'output directory')
+   .option('-o, --output <dir>', 'Output directory')
+   .option('-c, --create-dir', 'Explicitly create output dir')
    .option('-b, --begin-date <date>', 'Start recording at', dateValue)
    .option('-e, --end-date <date>', 'Stop recording at', dateValue)
-   .option('-a, --user-agent <string>', 'HTTP User-Agent')
+//   .option('-a, --user-agent <string>', 'HTTP User-Agent')
 //   .option('-f, --full', 'record all variants')
    .parse(process.argv);
 
@@ -44,6 +45,8 @@ var src = hlsrecord.args[0];
 if (!src) return hlsrecord.help();
 
 var outDir = hlsrecord.output || 'stream';
+if (hlsrecord.createDir)
+  fs.mkdirSync(outDir);
 
 if (hlsrecord.beginDate)
   console.log('fetching from:', hlsrecord.beginDate);
@@ -56,11 +59,6 @@ var options = {
   fullStream:true,
   highWaterMark:0,
 };
-
-if (!options.startDate) {
-  options.startDate = new Date();
-  options.fullStream = false;
-}
 
 function createReader(src) {
   return reader(src, options);
