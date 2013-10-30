@@ -16,7 +16,8 @@
   },
   "bin": {
     "hlsdump": "./bin/hlsdump",
-    "hlsmon": "./bin/hlsmon"
+    "hlsmon": "./bin/hlsmon",
+    "hlsrecord": "./bin/hlsrecord"
   },
   "repository": {
     "type": "git",
