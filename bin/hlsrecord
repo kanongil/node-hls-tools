@@ -61,7 +61,11 @@ var options = {
 };
 
 function createReader(src) {
-  return reader(src, options);
+  var r = reader(src, options);
+  r.on('error', function(err) {
+    console.error('reader error', err);
+  });
+  return r;
 }
 
 var r = createReader(src);
