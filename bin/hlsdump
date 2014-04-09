@@ -26,6 +26,8 @@ hlsdump.version('0.0.0')
    .option('-c, --concurrent <count>', 'fetch using concurrent connections', parseInt)
    .option('-a, --user-agent <string>', 'HTTP User-Agent')
    .option('-i, --info-port <port>', 'report status using HTTP + json', parseInt)
+   .option('--cookie <data>', 'add cookie header to key requests')
+   .option('--key <hex>', 'use oob key for decrypting segments', function(opt) {return new Buffer(opt, 'hex');})
    .parse(process.argv);
 
 var util = require('util'),
@@ -94,7 +96,12 @@ streamprocess(r, function (obj, done) {
         return pushBuffer(stream);
       }
       var iv = new Buffer(keyData.iv.slice(-32), 'hex');
-      var decrypt = crypto.createDecipheriv('aes-128-cbc', key, iv);
+      try {
+        var decrypt = crypto.createDecipheriv('aes-128-cbc', key, iv);
+      } catch (ex) {
+        console.error('crypto setup failed:', ex.stack || ex);
+        return pushBuffer(stream);
+      }
 
       stream.on('error', function(err) {
         decrypt.emit('error', err);
@@ -103,11 +110,18 @@ streamprocess(r, function (obj, done) {
     });
 
     function fetchKey(cb) {
+      if (hlsdump.key) return cb(null, hlsdump.key);
+
       var uri = url.resolve(r.url, keyData.uri.slice(1,-1));
-      if (keyCache[uri]) return cb(null, keyCache[uri]);
+      var entry = keyCache[uri];
+      if (entry && entry.length) return cb(null, keyCache[uri]);
 
       var key = new Buffer(0);
-      oncemore(uristream(uri, { whitelist:['http', 'https', 'data'], timeout: 10*1000 }))
+      var headers = {};
+      if (hlsdump.cookie)
+        headers['Cookie'] = hlsdump.cookie;
+      
+      oncemore(uristream(uri, { headers:headers, whitelist:['http', 'https', 'data'], timeout: 10*1000 }))
         .on('data', function(chunk) {
           key = Buffer.concat([key, chunk]);
         })
