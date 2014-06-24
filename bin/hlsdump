@@ -67,7 +67,7 @@ var keyCache = {};
 streamprocess(r, function (obj, done) {
   var meta = obj.meta;
   var duration = obj.segment.duration;
-  var size = meta.size;
+  var downloadSize = meta.size;
   var stream = oncemore(obj.stream);
   totalDuration += duration;
 
@@ -80,12 +80,12 @@ streamprocess(r, function (obj, done) {
 
   reading = true;
   currentSegment = obj.seq;
-  if (size === -1 || !hooked) {
-    size = 0;
+
+  // calculate size when missing
+  if (downloadSize === -1) {
+    downloadSize = 0;
     obj.stream.on('data', function(chunk) {
-      size += chunk.length;
-      if (!hooked && size >= hlsdump.bufferSize)
-        hook(buffer);
+      downloadSize += chunk.length;
     });
   }
 
@@ -136,10 +136,20 @@ streamprocess(r, function (obj, done) {
   }
 
   function pushBuffer(stream) {
+    if (!hooked) {
+      // pull data and detect if we need to hook before end
+      var buffered = 0;
+      stream.on('data', function(chunk) {
+        buffered += chunk.length;
+        if (!hooked && buffered >= hlsdump.bufferSize)
+          hook(buffer);
+      });
+    }
+
     stream.pipe(buffer, { end: false });
     stream.once('end', 'error', function(err) {
       reading = false;
-      console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (size / (duration * 1024 / 8)).toFixed(1));
+      console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
       if (err) {
         stats.meter('streamErrors').mark();
         console.error('stream error', err.stack || err);
