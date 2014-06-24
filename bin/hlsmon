@@ -25,7 +25,7 @@ function monitor(srcUrl) {
     while (null !== (obj = r.read())) {
       var meta = obj.meta;
       var duration = obj.segment.duration;
-      console.log(meta.modified.toJSON() + sep + meta.size + sep + duration.toFixed(3) + sep + (meta.size / (duration * 1024/8)).toFixed(3));
+      console.log(meta.modified.toJSON() + sep + meta.size + sep + duration.toFixed(3) + sep + (meta.size / (duration * 1024 / 8)).toFixed(3));
       time += duration;
     }
   });
@@ -41,7 +41,7 @@ function monitor(srcUrl) {
   r.on('end', function() {
     if (r.index && r.index.variant) {
       var newUrl = url.resolve(r.baseUrl, r.index.programs['1'][0].uri);
-      console.error('found variant index, using: ', newUrl)
+      console.error('found variant index, using: ', newUrl);
       return monitor(newUrl);
     }
     console.error('done');

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-process-exit */
 "use strict";
 
 // record a live hls-stream storing an on-demand ready version
@@ -19,9 +20,9 @@ function dateValue(val) {
   // FIXME: negative values doesn't work with commander, as
   if (val === 'now') return new Date();
   if (val.length && (val[0] === '+' || val[0] === '-'))
-    return new Date(Math.round(new Date().getTime()/1000 + parseInt(val, 10))*1000);
+    return new Date(Math.round(new Date().getTime() / 1000 + parseInt(val, 10)) * 1000);
   if (parseInt(val, 10) == val)
-    return new Date(parseInt(val, 10)*1000);
+    return new Date(parseInt(val, 10) * 1000);
   return new Date(val);
 }
 
@@ -42,7 +43,10 @@ mime.define({
 });
 
 var src = hlsrecord.args[0];
-if (!src) return hlsrecord.help();
+if (!src) {
+  hlsrecord.help();
+  process.exit(-1);
+}
 
 var outDir = hlsrecord.output || 'stream';
 if (hlsrecord.createDir)
@@ -56,7 +60,7 @@ if (hlsrecord.endDate)
 var options = {
   startDate: hlsrecord.beginDate,
   stopDate: hlsrecord.endDate,
-  maxStallTime: 5*60*1000,
+  maxStallTime: 5 * 60 * 1000,
   fullStream:true,
   highWaterMark:0,
 };
@@ -69,5 +73,5 @@ function createReader(src) {
   return r;
 }
 
-var r = createReader(src);
-recorder(r, outDir, { subreader:createReader }).start();
+var rdr = createReader(src);
+recorder(rdr, outDir, { subreader:createReader }).start();

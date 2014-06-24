@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-process-exit */
+"use strict";
+
 var hlsdump = require('commander');
 hlsdump.version('0.0.0')
    .usage('[options] <url>')
@@ -18,7 +21,7 @@ hlsdump.version('0.0.0')
      return r;
    })
    .option('-b, --buffer-size <bytes>|full', 'try to buffer <bytes> of input data (implies -s)', function(val) {
-     if (val === 'full') return 0x80000000-1;
+     if (val === 'full') return 0x80000000 - 1;
      return parseInt(val, 0);
    })
    .option('-s, --sync', 'clock sync using stream PCR')
@@ -43,24 +46,22 @@ var reader = require('../lib/reader'),
     tssmooth = require('../lib/tssmooth'),
     tsblast = require('../lib/tsblast');
 
-try {
-  var Passthrough = require('stream').Passthrough;
-  assert(Passthrough);
-} catch (e) {
-  var Passthrough = require('readable-stream/passthrough');
-}
+var Passthrough = require('readable-stream/passthrough');
 
 var stats = require('measured').createCollection();
 
 var src = hlsdump.args[0];
-if (!src) return hlsdump.help();
+if (!src) {
+  hlsdump.help();
+  process.exit(-1);
+}
 
 if (hlsdump.bufferSize) hlsdump.sync = true;
 
 var r = reader(src, {highWaterMark:(hlsdump.concurrent || 1) - 1, fullStream:hlsdump.fullStream});
 
 var totalDuration = 0, currentSegment = -1;
-var reading = false;
+var reading = false, hooked = false;
 var keyCache = {};
 
 streamprocess(r, function (obj, done) {
@@ -73,7 +74,7 @@ streamprocess(r, function (obj, done) {
   console.error('piping segment', meta.url);
 
   var stopwatch = stats.timer('fetchTime').start();
-  stream.once('close', 'end', 'error', function(err) {
+  stream.once('close', 'end', 'error', function() {
     stopwatch.end();
   });
 
@@ -108,37 +109,37 @@ streamprocess(r, function (obj, done) {
       });
       pushBuffer(oncemore(stream.pipe(decrypt)));
     });
-
-    function fetchKey(cb) {
-      if (hlsdump.key) return cb(null, hlsdump.key);
-
-      var uri = url.resolve(r.url, keyData.uri.slice(1,-1));
-      var entry = keyCache[uri];
-      if (entry && entry.length) return cb(null, keyCache[uri]);
-
-      var key = new Buffer(0);
-      var headers = {};
-      if (hlsdump.cookie)
-        headers['Cookie'] = hlsdump.cookie;
-      
-      oncemore(uristream(uri, { headers:headers, whitelist:['http', 'https', 'data'], timeout: 10*1000 }))
-        .on('data', function(chunk) {
-          key = Buffer.concat([key, chunk]);
-        })
-        .once('error', 'end', function(err) {
-          keyCache[uri] = key;
-          return cb(err, key);
-        });
-    }
   } else {
     pushBuffer(stream);
+  }
+
+  function fetchKey(cb) {
+    if (hlsdump.key) return cb(null, hlsdump.key);
+
+    var uri = url.resolve(r.url, keyData.uri.slice(1,-1));
+    var entry = keyCache[uri];
+    if (entry && entry.length) return cb(null, keyCache[uri]);
+
+    var key = new Buffer(0);
+    var headers = {};
+    if (hlsdump.cookie)
+      headers.Cookie = hlsdump.cookie;
+
+    oncemore(uristream(uri, { headers:headers, whitelist:['http', 'https', 'data'], timeout: 10 * 1000 }))
+      .on('data', function(chunk) {
+        key = Buffer.concat([key, chunk]);
+      })
+      .once('error', 'end', function(err) {
+        keyCache[uri] = key;
+        return cb(err, key);
+      });
   }
 
   function pushBuffer(stream) {
     stream.pipe(buffer, { end: false });
     stream.once('end', 'error', function(err) {
       reading = false;
-      console.error('segment done at '+totalDuration.toFixed(0)+' seconds, avg bitrate (kbps):', (size / (duration * 1024/8)).toFixed(1));
+      console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (size / (duration * 1024 / 8)).toFixed(1));
       if (err) {
         stats.meter('streamErrors').mark();
         console.error('stream error', err.stack || err);
@@ -175,7 +176,6 @@ if (hlsdump.output) {
 }
 
 // the hook is used to prebuffer
-var hooked = false;
 function hook(stream) {
   if (hooked) return;
 
