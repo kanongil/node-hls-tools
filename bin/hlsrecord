@@ -12,16 +12,17 @@ hlsrecord.version(require('../package').version)
    .option('-c, --create-dir', 'Explicitly create output dir')
    .option('-b, --begin-date <date>', 'Start recording at', dateValue)
    .option('-e, --end-date <date>', 'Stop recording at', dateValue)
+   .option('-s, --start-offset <seconds>', 'Playback start time offset', parseFloat)
 //   .option('-a, --user-agent <string>', 'HTTP User-Agent')
 //   .option('-f, --full', 'record all variants')
    .parse(process.argv);
 
 function dateValue(val) {
-  // FIXME: negative values doesn't work with commander, as
+  // FIXME: negative values doesn't work with commander - https://github.com/visionmedia/commander.js/issues/61
   if (val === 'now') return new Date();
   if (val.length && (val[0] === '+' || val[0] === '-'))
     return new Date(Math.round(new Date().getTime() / 1000 + parseInt(val, 10)) * 1000);
-  if (parseInt(val, 10) == val)
+  if (!isNaN(parseInt(val, 10)))
     return new Date(parseInt(val, 10) * 1000);
   return new Date(val);
 }
@@ -74,4 +75,4 @@ function createReader(src) {
 }
 
 var rdr = createReader(src);
-recorder(rdr, outDir, { subreader:createReader }).start();
+recorder(rdr, outDir, { subreader:createReader, startOffset: hlsrecord.startOffset }).start();
