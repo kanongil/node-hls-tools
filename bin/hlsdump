@@ -89,7 +89,7 @@ streamprocess(r, function (obj, done) {
     });
   }
 
-  var keyData = r.index.keyForSeqNo(obj.seq);
+  var keyData = obj.segment.key;
   if (keyData && keyData.method === 'AES-128' && keyData.uri && keyData.uri.length > 2) {
     fetchKey(function(err, key) {
       if (err) {
