@@ -22,7 +22,7 @@ function dateValue(val) {
   if (val === 'now') return new Date();
   if (val.length && (val[0] === '+' || val[0] === '-'))
     return new Date(Math.round(new Date().getTime() / 1000 + parseInt(val, 10)) * 1000);
-  if (!isNaN(parseInt(val, 10)))
+  if (parseInt(val, 10) == val)
     return new Date(parseInt(val, 10) * 1000);
   return new Date(val);
 }
