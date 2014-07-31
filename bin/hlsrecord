@@ -13,6 +13,12 @@ hlsrecord.version(require('../package').version)
    .option('-b, --begin-date <date>', 'Start recording at', dateValue)
    .option('-e, --end-date <date>', 'Stop recording at', dateValue)
    .option('-s, --start-offset <seconds>', 'Playback start time offset', parseFloat)
+   .option('--extension <label>', 'preserve vendor extension', function (val) {
+     return (hlsrecord.extension || []).concat(val);
+   })
+   .option('--segment-ext <label>', 'preserve vendor segment extension', function (val) {
+     return (hlsrecord.segmentExt || []).concat(val);
+   })
 //   .option('-a, --user-agent <string>', 'HTTP User-Agent')
 //   .option('-f, --full', 'record all variants')
    .parse(process.argv);
@@ -58,16 +64,25 @@ if (hlsrecord.beginDate)
 if (hlsrecord.endDate)
   console.log('fetching until:', hlsrecord.endDate);
 
-var options = {
+var extensions = {};
+(hlsrecord.extension || []).forEach(function(ext) {
+  extensions[ext] = false;
+});
+(hlsrecord.segmentExt || []).forEach(function(ext) {
+  extensions[ext] = true;
+});
+
+var readerOptions = {
   startDate: hlsrecord.beginDate,
   stopDate: hlsrecord.endDate,
   maxStallTime: 5 * 60 * 1000,
   fullStream:true,
+  extensions: extensions,
   highWaterMark:0,
 };
 
 function createReader(src) {
-  var r = reader(src, options);
+  var r = reader(src, readerOptions);
   r.on('error', function(err) {
     console.error('reader error', err);
   });
