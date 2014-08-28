@@ -41,10 +41,10 @@ var util = require('util'),
 
 var streamprocess = require('streamprocess'),
     oncemore = require('oncemore'),
-    uristream = require('uristream');
+    uristream = require('uristream'),
+    UdpBlast = require('udp-blast');
 var reader = require('../lib/reader'),
-    tssmooth = require('../lib/tssmooth'),
-    tsblast = require('../lib/tsblast');
+    tssmooth = require('../lib/tssmooth');
 
 var Passthrough = require('readable-stream/passthrough');
 
@@ -176,7 +176,7 @@ var buffer = new Passthrough({highWaterMark:hlsdump.bufferSize});
 var outputs = [];
 
 if (hlsdump.udp)
-  outputs.push(tsblast(hlsdump.udp));
+  outputs.push(new UdpBlast(hlsdump.udp, { packetSize: 7 * 188 }));
 
 if (hlsdump.output) {
   if (hlsdump.output === '-')

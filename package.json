@@ -37,6 +37,7 @@
     "oncemore": "~0.1.0",
     "readable-stream": "~1.0.0",
     "streamprocess": "0.0.1",
+    "udp-blast": "^1.0.0",
     "uristream": "~0.1.0",
     "xtend": "^2.0.3"
   },
