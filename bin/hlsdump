@@ -210,7 +210,7 @@ function hook(stream) {
   hooked = true;
 }
 
-if (!hlsdump.sync)
+if (!hlsdump.sync || !(hlsdump.bufferSize > 0))
   hook(buffer);
 
 // setup stat tracking
