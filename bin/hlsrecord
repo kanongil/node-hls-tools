@@ -33,21 +33,10 @@ function dateValue(val) {
   return new Date(val);
 }
 
-var fs = require('fs'),
-    path = require('path'),
-    util = require('util');
+var fs = require('fs');
 
-var mime = require('mime');
-var reader = require('../lib/reader'),
-    recorder = require('../lib/recorder');
-
-mime.define({
-  'application/vnd.apple.mpegURL': ['m3u8'],
-  'video/mp2t': ['ts'],
-  'audio/x-aac': ['aac'],
-  'audio/aac': ['aac'],
-  'audio/ac3': ['ac3'],
-});
+var HlsSegmentReader = require('hls-segment-reader');
+var recorder = require('../lib/recorder');
 
 var src = hlsrecord.args[0];
 if (!src) {
@@ -76,13 +65,13 @@ var readerOptions = {
   startDate: hlsrecord.beginDate,
   stopDate: hlsrecord.endDate,
   maxStallTime: 5 * 60 * 1000,
-  fullStream:true,
+  fullStream: true,
   extensions: extensions,
-  highWaterMark:0,
+  highWaterMark: 0,
 };
 
 function createReader(src) {
-  var r = reader(src, readerOptions);
+  var r = new HlsSegmentReader(src, readerOptions);
   r.on('error', function(err) {
     console.error('reader error', err);
   });

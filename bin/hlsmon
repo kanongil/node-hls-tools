@@ -8,16 +8,15 @@ hlsmon.version('0.0.0')
    .option('-a', '--user-agent <string>', 'User-Agent')
    .parse(process.argv);
 
-var util = require('util'),
-    url = require('url');
+var url = require('url');
 
-var reader = require('../lib/reader');
+var HlsSegmentReader = require('hls-segment-reader');
 
 var src = process.argv[2];
 var sep = ';';
 
 function monitor(srcUrl) {
-  var r = reader(srcUrl, {noData:true});
+  var r = new HlsSegmentReader(srcUrl, { noData:true });
 
   var time = 0;
   r.on('readable', function() {

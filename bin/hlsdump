@@ -33,8 +33,7 @@ hlsdump.version('0.0.0')
    .option('--key <hex>', 'use oob key for decrypting segments', function(opt) {return new Buffer(opt, 'hex');})
    .parse(process.argv);
 
-var util = require('util'),
-    url = require('url'),
+var url = require('url'),
     fs = require('fs'),
     http = require('http'),
     crypto = require('crypto');
@@ -42,9 +41,9 @@ var util = require('util'),
 var streamprocess = require('streamprocess'),
     oncemore = require('oncemore'),
     uristream = require('uristream'),
+    HlsSegmentReader = require('hls-segment-reader'),
     UdpBlast = require('udp-blast');
-var reader = require('../lib/reader'),
-    tssmooth = require('../lib/tssmooth');
+var tssmooth = require('../lib/tssmooth');
 
 var Passthrough = require('readable-stream/passthrough');
 
@@ -58,7 +57,7 @@ if (!src) {
 
 if (hlsdump.bufferSize) hlsdump.sync = true;
 
-var r = reader(src, {highWaterMark:(hlsdump.concurrent || 1) - 1, fullStream:hlsdump.fullStream});
+var r = new HlsSegmentReader(src, {highWaterMark:(hlsdump.concurrent || 1) - 1, fullStream:hlsdump.fullStream});
 
 var totalDuration = 0, currentSegment = -1;
 var reading = false, hooked = false;
