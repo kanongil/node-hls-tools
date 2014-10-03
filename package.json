@@ -40,6 +40,7 @@
     "streamprocess": "0.0.1",
     "udp-blast": "^1.0.0",
     "uristream": "^1.1.0",
+    "write-file-atomic": "^1.1.0",
     "xtend": "^4.0.0"
   },
   "devDependencies": {
