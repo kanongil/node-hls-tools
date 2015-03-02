@@ -8,7 +8,7 @@ hlsdump.version('0.0.0')
    .usage('[options] <url>')
    .option('-o, --output <path>', 'target file')
    .option('-u, --udp [host:port]', 'relay TS over UDP', function(val) {
-     var r = { host:'localhost', port:1234 };
+     var r = { host: 'localhost', port: 1234 };
      if (val) {
        var s = val.split(':');
        if (s.length === 1) {
@@ -174,8 +174,10 @@ r.on('end', function() {
 var buffer = new Passthrough({highWaterMark:hlsdump.bufferSize});
 var outputs = [];
 
-if (hlsdump.udp)
-  outputs.push(new UdpBlast(hlsdump.udp, { packetSize: 7 * 188 }));
+if (hlsdump.udp) {
+  var dst = (hlsdump.udp === true) ? null : hlsdump.udp;
+  outputs.push(new UdpBlast(dst, { packetSize: 7 * 188 }));
+}
 
 if (hlsdump.output) {
   if (hlsdump.output === '-')
