@@ -26,7 +26,6 @@
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD",
   "dependencies": {
-    "carrier": "~0.1.8",
     "commander": "^2.3.0",
     "debug": "^2.0.0",
     "deep-equal": "^1.0.0",
@@ -40,8 +39,7 @@
     "streamprocess": "0.0.1",
     "udp-blast": "^1.0.0",
     "uristream": "^1.1.0",
-    "write-file-atomic": "^1.1.0",
-    "xtend": "^4.0.0"
+    "write-file-atomic": "^1.1.0"
   },
   "devDependencies": {},
   "engines": {
