@@ -41,8 +41,6 @@ var oncemore = require('oncemore'),
     UdpBlast = require('udp-blast');
 var HlsReader = require('../lib/hls-reader');
 
-var stats = require('measured').createCollection();
-
 var src = hlsdump.args[0];
 if (!src) {
   hlsdump.help();
@@ -51,29 +49,14 @@ if (!src) {
 
 if (hlsdump.bufferSize) hlsdump.sync = true;
 
-var r = new HlsReader(new HlsSegmentReader(src, { highWaterMark: (hlsdump.concurrent || 1) - 1, fullStream: hlsdump.fullStream }), hlsdump);
+var segmentReader = new HlsSegmentReader(src, { highWaterMark: (hlsdump.concurrent || 1) - 1, fullStream: hlsdump.fullStream });
+var r = new HlsReader(segmentReader, hlsdump);
 
-var totalDuration = 0, currentSegment = -1;
-r.on('segment', function(data) {
-  var downloadSize = data.meta.size;
-  var duration = data.segment.duration;
-
-  // calculate size when missing
-  if (downloadSize === -1) {
-    downloadSize = 0;
-    data.stream.on('data', function(chunk) {
-      downloadSize += chunk.length;
-    });
-  }
-
-  var stopwatch = stats.timer('fetchTime').start();
-  oncemore(data.stream).once('close', 'end', 'error', function(err) {
-    stopwatch.end();
-
-    console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
-    if (err) {
-      stats.meter('streamErrors').mark();
-    }
+segmentReader.once('index', function() {
+  // wait until first index is returned before attaching error listener.
+  // this will enable initials errors to throw
+  segmentReader.on('error', function(err) {
+    console.error('reader error', err.stack || err);
   });
 });
 
@@ -89,17 +72,59 @@ if (hlsdump.output) {
     r.pipe(fs.createWriteStream(hlsdump.output));
 }
 
-// setup stat tracking
-stats.gauge('bufferBytes', function() { return r.buffer._readableState.length/* + buffer._writableState.length*/; });
-stats.gauge('currentSegment', function() { return currentSegment; });
-stats.gauge('index.first', function() { return r.reader.index ? r.reader.index.first_seq_no : -1; });
-stats.gauge('index.last', function() { return r.reader.index ? r.reader.index.lastSeqNo() : -1; });
-stats.gauge('totalDuration', function() { return totalDuration; });
+var startTime = process.hrtime();
+r.on('ready', function() {
+  var delay = process.hrtime(startTime);
+  console.error('"ready" after delay of ' + (delay[0] * 1e3 + delay[1] / 1e6).toFixed(2) + 'ms');
+});
 
-stats.meter('streamErrors');
+r.on('end', function() {
+  console.error('stream complete');
+})
+
+var totalDuration = 0;
+r.on('segment', function(data) {
+  var downloadSize = data.meta.size;
+  var duration = data.segment.duration;
+  totalDuration += duration;
+
+  // calculate size when missing
+  if (downloadSize === -1) {
+    downloadSize = 0;
+    data.stream.on('data', function(chunk) {
+      downloadSize += chunk.length;
+    });
+  }
+
+  oncemore(data.stream).once('close', 'end', 'error', function(/*err*/) {
+    console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
+  });
+});
 
 if (hlsdump.infoPort) {
-  http.createServer(function (req, res) {
+  var stats = require('measured').createCollection();
+  var currentSegment = -1;
+
+  // setup stat tracking
+  stats.gauge('bufferBytes', function() { return r.buffer._readableState.length/* + buffer._writableState.length*/; });
+  stats.gauge('currentSegment', function() { return currentSegment; });
+  stats.gauge('index.first', function() { return segmentReader.index ? segmentReader.index.first_seq_no : -1; });
+  stats.gauge('index.last', function() { return segmentReader.index ? segmentReader.index.lastSeqNo() : -1; });
+  stats.gauge('totalDuration', function() { return totalDuration; });
+
+  stats.meter('streamErrors');
+
+  r.on('segment', function(data) {
+    currentSegment = data.seq;
+
+    var stopwatch = stats.timer('fetchTime').start();
+    oncemore(data.stream).once('close', 'end', 'error', function(err) {
+      stopwatch.end();
+      if (err) stats.meter('streamErrors').mark();
+    });
+  });
+
+  var server = http.createServer(function (req, res) {
     if (req.method === 'GET') {
       var data = JSON.stringify(stats, null, ' ');
       res.writeHead(200, {
@@ -110,4 +135,8 @@ if (hlsdump.infoPort) {
     }
     res.end();
   }).listen(hlsdump.infoPort);
+
+  oncemore(r).once('end', 'error', function(/*err*/) {
+    server.close();
+  });
 }
