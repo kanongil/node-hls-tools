@@ -49,7 +49,7 @@ if (!src) {
 
 if (hlsdump.bufferSize) hlsdump.sync = true;
 
-var segmentReader = new HlsSegmentReader(src, { highWaterMark: (hlsdump.concurrent || 1) - 1, fullStream: hlsdump.fullStream });
+var segmentReader = new HlsSegmentReader(src, { withData: true, highWaterMark: (hlsdump.concurrent || 1) - 1, fullStream: hlsdump.fullStream });
 var r = new HlsReader(segmentReader, hlsdump);
 
 segmentReader.once('index', function() {
@@ -83,20 +83,20 @@ r.on('end', function() {
 })
 
 var totalDuration = 0;
-r.on('segment', function(data) {
-  var downloadSize = data.meta.size;
-  var duration = data.segment.duration;
+r.on('segment', function(segmentInfo) {
+  var downloadSize = segmentInfo.file.size;
+  var duration = segmentInfo.details.duration;
   totalDuration += duration;
 
   // calculate size when missing
   if (downloadSize === -1) {
     downloadSize = 0;
-    data.stream.on('data', function(chunk) {
+    segmentInfo.stream.on('data', function(chunk) {
       downloadSize += chunk.length;
     });
   }
 
-  oncemore(data.stream).once('close', 'end', 'error', function(/*err*/) {
+  oncemore(segmentInfo.stream).once('close', 'end', 'error', function(/*err*/) {
     console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
   });
 });
@@ -114,11 +114,11 @@ if (hlsdump.infoPort) {
 
   stats.meter('streamErrors');
 
-  r.on('segment', function(data) {
-    currentSegment = data.seq;
+  r.on('segment', function(segmentInfo) {
+    currentSegment = segmentInfo.seq;
 
     var stopwatch = stats.timer('fetchTime').start();
-    oncemore(data.stream).once('close', 'end', 'error', function(err) {
+    oncemore(segmentInfo.stream).once('close', 'end', 'error', function(err) {
       stopwatch.end();
       if (err) stats.meter('streamErrors').mark();
     });

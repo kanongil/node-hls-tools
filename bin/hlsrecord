@@ -62,10 +62,11 @@ var extensions = {};
 });
 
 var readerOptions = {
+  withData: true,
+  fullStream: !hlsrecord.beginDate,
   startDate: hlsrecord.beginDate,
   stopDate: hlsrecord.endDate,
   maxStallTime: 5 * 60 * 1000,
-  fullStream: true,
   extensions: extensions,
   highWaterMark: 0,
 };

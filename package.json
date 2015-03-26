@@ -29,7 +29,7 @@
     "commander": "^2.3.0",
     "debug": "^2.0.0",
     "deep-equal": "^1.0.0",
-    "hls-segment-reader": "^1.0.0",
+    "hls-segment-reader": "^2.0.0",
     "m3u8parse": "^0.1.13",
     "measured": "^1.0.0",
     "mime-types": "^2.0.1",

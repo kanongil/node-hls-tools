@@ -16,7 +16,7 @@ var src = process.argv[2];
 var sep = ';';
 
 function monitor(srcUrl) {
-  var r = new HlsSegmentReader(srcUrl, { noData:true });
+  var r = new HlsSegmentReader(srcUrl);
 
   var time = 0;
   r.on('readable', function() {
