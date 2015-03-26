@@ -5,67 +5,72 @@
 
 // record a live hls-stream storing an on-demand ready version
 
-var hlsrecord = require('commander');
-hlsrecord.version(require('../package').version)
-   .usage('[options] <url>')
-   .option('-o, --output <dir>', 'Output directory')
-   .option('-c, --create-dir', 'Explicitly create output dir')
-   .option('-b, --begin-date <date>', 'Start recording at', dateValue)
-   .option('-e, --end-date <date>', 'Stop recording at', dateValue)
-   .option('-s, --start-offset <seconds>', 'Playback start time offset', parseFloat)
-   .option('--extension <label>', 'preserve vendor extension', function (val) {
-     return (hlsrecord.extension || []).concat(val);
-   })
-   .option('--segment-ext <label>', 'preserve vendor segment extension', function (val) {
-     return (hlsrecord.segmentExt || []).concat(val);
-   })
-//   .option('-a, --user-agent <string>', 'HTTP User-Agent')
-//   .option('-f, --full', 'record all variants')
-   .parse(process.argv);
-
-function dateValue(val) {
-  // FIXME: negative values doesn't work with commander - https://github.com/visionmedia/commander.js/issues/61
-  if (val === 'now') return new Date();
-  if (val.length && (val[0] === '+' || val[0] === '-'))
-    return new Date(Math.round(new Date().getTime() / 1000 + parseInt(val, 10)) * 1000);
-  if (parseInt(val, 10) == val)
-    return new Date(parseInt(val, 10) * 1000);
-  return new Date(val);
-}
-
-var fs = require('fs');
+var fs = require('fs'),
+    path = require('path');
+var nopt = require('noptify/node_modules/nopt');
 
 var HlsSegmentReader = require('hls-segment-reader');
 var recorder = require('../lib/recorder');
 
-var src = hlsrecord.args[0];
+function DateValue(){}
+nopt.typeDefs[DateValue] = { type: DateValue, validate: function (data, key, val) {
+  var date;
+  if (val === 'now') val = '+0';
+  if (val.length && (val[0] === '+' || val[0] === '-')) {
+    date = new Date(Math.round(new Date().getTime() / 1000 + parseInt(val, 10)) * 1000);
+  } else if (parseInt(val, 10) == val) {
+    date = new Date(parseInt(val, 10) * 1000);
+  } else {
+    data = new Date(val);
+  }
+  if (!date) return false;
+  data[key] = date;
+}};
+
+var hlsrecord = require('noptify')(process.argv, { program: 'hlsrecord <url>' });
+hlsrecord.version(require('../package').version)
+   .option('collect', '-C', 'Collect output segments to a single file', Boolean)
+   .option('output', '-o', 'Output directory', path)
+   .option('create-dir', '-c', 'Explicitly create output dir', Boolean)
+   .option('begin-date', '-b', 'Start recording at', DateValue)
+   .option('end-date', '-e', 'Stop recording at', DateValue)
+   .option('start-offset', '-s', 'Playback start time offset in seconds', Number)
+   .option('create-dir', '-c', 'Explicitly create output dir', Boolean)
+   .option('extension', 'Preserve specified vendor extension', Array)
+   .option('segment-extension', 'Preserve specified vendor segment extension', Array)
+//   .option('-a, --user-agent <string>', 'HTTP User-Agent')
+//   .option('-f, --full', 'record all variants')
+   .parse(process.argv);
+
+var options = hlsrecord.nopt;
+var src = options.argv.remain[0];
 if (!src) {
   hlsrecord.help();
   process.exit(-1);
 }
 
-var outDir = hlsrecord.output || 'stream';
-if (hlsrecord.createDir)
+var outDir = options.output || 'stream';
+if (options['create-dir'])
   fs.mkdirSync(outDir);
 
-if (hlsrecord.beginDate)
-  console.log('fetching from:', hlsrecord.beginDate);
-if (hlsrecord.endDate)
-  console.log('fetching until:', hlsrecord.endDate);
+if (options['begin-date'])
+  console.log('fetching from:', options['begin-date']);
+if (options['end-date'])
+  console.log('fetching until:', options['end-date']);
 
 var extensions = {};
-(hlsrecord.extension || []).forEach(function(ext) {
+(options.extension || []).forEach(function(ext) {
   extensions[ext] = false;
 });
-(hlsrecord.segmentExt || []).forEach(function(ext) {
+(options['segment-extension'] || []).forEach(function(ext) {
   extensions[ext] = true;
 });
 
 var readerOptions = {
   withData: true,
-  fullStream: !hlsrecord.beginDate,
-  startDate: hlsrecord.beginDate,
-  stopDate: hlsrecord.endDate,
+  fullStream: !options['begin-date'],
+  startDate: options['begin-date'],
+  stopDate: options['end-date'],
   maxStallTime: 5 * 60 * 1000,
   extensions: extensions,
   highWaterMark: 0,
@@ -80,4 +85,4 @@ function createReader(src) {
 }
 
 var rdr = createReader(src);
-recorder(rdr, outDir, { subreader:createReader, startOffset: hlsrecord.startOffset }).start();
+recorder(rdr, outDir, { subreader:createReader, startOffset: options['start-offset'], collect: options.collect }).start();
