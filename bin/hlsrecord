@@ -21,10 +21,16 @@ nopt.typeDefs[DateValue] = { type: DateValue, validate: function (data, key, val
   } else if (parseInt(val, 10) == val) {
     date = new Date(parseInt(val, 10) * 1000);
   } else {
-    data = new Date(val);
+    date = new Date(val);
   }
   if (!date) return false;
   data[key] = date;
+}};
+
+function HexValue(){}
+nopt.typeDefs[HexValue] = { type: HexValue, validate: function (data, key, val) {
+  console.log('!', data, key, val)
+  data[key] = new Buffer(val, 'hex');
 }};
 
 var hlsrecord = require('noptify')(process.argv, { program: 'hlsrecord <url>' });
