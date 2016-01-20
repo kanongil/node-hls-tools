@@ -7,7 +7,12 @@
 
 var fs = require('fs'),
     path = require('path');
-var nopt = require('noptify/node_modules/nopt');
+var nopt;
+try {
+  nopt = require('noptify/node_modules/nopt');
+} catch (e) {
+  nopt = require('nopt');
+}
 
 var HlsSegmentReader = require('hls-segment-reader');
 var recorder = require('../lib/recorder');
@@ -29,7 +34,6 @@ nopt.typeDefs[DateValue] = { type: DateValue, validate: function (data, key, val
 
 function HexValue(){}
 nopt.typeDefs[HexValue] = { type: HexValue, validate: function (data, key, val) {
-  console.log('!', data, key, val)
   data[key] = new Buffer(val, 'hex');
 }};
 
@@ -44,7 +48,10 @@ hlsrecord.version(require('../package').version)
    .option('create-dir', '-c', 'Explicitly create output dir', Boolean)
    .option('extension', 'Preserve specified vendor extension', Array)
    .option('segment-extension', 'Preserve specified vendor segment extension', Array)
-//   .option('-a, --user-agent <string>', 'HTTP User-Agent')
+   .option('user-agent', '-a', 'HTTP User-Agent', String)
+   .option('decrypt', 'Attempt to decrypt segments', Boolean)
+   .option('cookie', 'Add cookie header to key requests', String)
+   .option('key', 'Use oob hex encoded key to decrypt segments', HexValue)
 //   .option('-f, --full', 'record all variants')
    .parse(process.argv);
 
@@ -90,5 +97,13 @@ function createReader(src) {
   return r;
 }
 
+var decrypt = null;
+if (options.decrypt) {
+  decrypt = {
+    cookie: options.cookie,
+    key: options.key
+  };
+}
+
 var rdr = createReader(src);
-recorder(rdr, outDir, { subreader:createReader, startOffset: options['start-offset'], collect: options.collect }).start();
+recorder(rdr, outDir, { subreader:createReader, startOffset: options['start-offset'], collect: options.collect, decrypt: decrypt }).start();
