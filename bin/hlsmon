@@ -16,17 +16,14 @@ var src = process.argv[2];
 var sep = ';';
 
 function monitor(srcUrl) {
-  var r = new HlsSegmentReader(srcUrl);
+  var r = new HlsSegmentReader(srcUrl, { fullStream:true, withData:false });
 
   var time = 0;
-  r.on('readable', function() {
-    var obj;
-    while (null !== (obj = r.read())) {
-      var meta = obj.meta;
-      var duration = obj.segment.duration;
-      console.log(meta.modified.toJSON() + sep + meta.size + sep + duration.toFixed(3) + sep + (meta.size / (duration * 1024 / 8)).toFixed(3));
-      time += duration;
-    }
+  r.on('data', function (segmentInfo) {
+    var meta = segmentInfo.file;
+    var duration = segmentInfo.details.duration;
+    console.log(meta.modified.toJSON() + sep + meta.size + sep + duration.toFixed(3) + sep + (meta.size / (duration * 1024 / 8)).toFixed(3));
+    time += duration;
   });
 
   r.once('index', function() {
