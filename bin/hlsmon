@@ -35,8 +35,8 @@ function monitor(srcUrl) {
   });
 
   r.on('end', function() {
-    if (r.index && r.index.variant) {
-      var newUrl = url.resolve(r.baseUrl, r.index.programs['1'][0].uri);
+    if (r.index && r.index.master) {
+      var newUrl = url.resolve(r.baseUrl, r.index.variants[0].uri);
       console.error('found variant index, using: ', newUrl);
       return monitor(newUrl);
     }
