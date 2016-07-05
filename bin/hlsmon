@@ -42,8 +42,6 @@ function monitor(srcUrl) {
     }
     console.error('done');
   });
-
-  r.resume();
 }
 
 monitor(src);

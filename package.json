@@ -37,7 +37,7 @@
     "noptify": "0.0.3",
     "oncemore": "^1.0.0",
     "readable-stream": "^2.0.2",
-    "streamprocess": "^1.0.0",
+    "stream-each": "^1.1.2",
     "udp-blast": "^1.0.0",
     "uristream": "^1.1.0",
     "write-file-atomic": "^1.1.0"
