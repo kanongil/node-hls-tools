@@ -26,6 +26,7 @@
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD-2-Clause",
   "dependencies": {
+    "async": "^2.0.0-rc.6",
     "commander": "^2.3.0",
     "debug": "^2.0.0",
     "deep-equal": "^1.0.0",
