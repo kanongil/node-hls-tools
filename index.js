@@ -1,3 +1,3 @@
 module.exports = {
-  reader: require('./lib/reader')
+  reader: require('./lib/hls-reader')
 };
