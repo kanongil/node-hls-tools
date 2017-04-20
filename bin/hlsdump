@@ -85,7 +85,7 @@ r.on('end', function() {
 var totalDuration = 0;
 r.on('segment', function(segmentInfo) {
   var downloadSize = segmentInfo.file.size;
-  var duration = segmentInfo.details.duration;
+  var duration = segmentInfo.segment ? segmentInfo.segment.details.duration : 0;
   totalDuration += duration;
 
   // calculate size when missing
@@ -115,7 +115,7 @@ if (hlsdump.infoPort) {
   stats.meter('streamErrors');
 
   r.on('segment', function(segmentInfo) {
-    currentSegment = segmentInfo.seq;
+    currentSegment = segmentInfo.segment && segmentInfo.segment.seq;
 
     var stopwatch = stats.timer('fetchTime').start();
     oncemore(segmentInfo.stream).once('close', 'end', 'error', function(err) {

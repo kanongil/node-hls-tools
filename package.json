@@ -26,11 +26,9 @@
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "async": "^2.0.0-rc.6",
     "commander": "^2.3.0",
     "debug": "^2.0.0",
-    "deep-equal": "^1.0.0",
-    "hls-segment-reader": "^3.0.0",
+    "hls-segment-reader": "^4.0.1",
     "m3u8parse": "^1.0.0",
     "measured": "^1.0.0",
     "mime-types": "^2.0.1",
@@ -40,7 +38,7 @@
     "readable-stream": "^2.0.2",
     "stream-each": "^1.1.2",
     "udp-blast": "^1.0.0",
-    "uristream": "^1.1.0",
+    "uristream": "^2.0.0",
     "write-file-atomic": "^1.1.0"
   },
   "devDependencies": {},

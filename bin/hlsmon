@@ -18,11 +18,25 @@ var sep = ';';
 function monitor(srcUrl) {
   var r = new HlsSegmentReader(srcUrl, { fullStream:true, withData:false });
 
+  var contentBytes = function (segmentInfo) {
+
+    if (segmentInfo.type === 'segment') {
+      return segmentInfo.segment.details.byterange ? +segmentInfo.segment.details.byterange.length : segmentInfo.file.size;
+    }
+
+    if (segmentInfo.type === 'init') {
+      return segmentInfo.init.byterange ? parseInt(segmentInfo.init.quotedString('byterange'), 10): segmentInfo.file.size;
+    }
+
+    return segmentInfo.file.size;
+  };
+
   var time = 0;
   r.on('data', function (segmentInfo) {
     var meta = segmentInfo.file;
-    var duration = segmentInfo.details.duration;
-    console.log(meta.modified.toJSON() + sep + meta.size + sep + duration.toFixed(3) + sep + (meta.size / (duration * 1024 / 8)).toFixed(3));
+    var size = contentBytes(segmentInfo);
+    var duration = +(segmentInfo.segment && segmentInfo.segment.details.duration);
+    console.log(meta.modified.toJSON() + sep + size + sep + duration.toFixed(3) + sep + (size / (duration * 1024 / 8)).toFixed(3));
     time += duration;
   });
 
