@@ -26,6 +26,7 @@
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD-2-Clause",
   "dependencies": {
+    "aws-sdk": "^2.179.0",
     "commander": "^2.3.0",
     "debug": "^2.0.0",
     "hls-segment-reader": "^4.0.1",

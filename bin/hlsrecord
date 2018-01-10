@@ -5,8 +5,7 @@
 
 // record a live hls-stream storing an on-demand ready version
 
-var fs = require('fs'),
-    path = require('path');
+var fs = require('fs');
 var nopt;
 try {
   nopt = require('noptify/node_modules/nopt');
@@ -40,7 +39,7 @@ nopt.typeDefs[HexValue] = { type: HexValue, validate: function (data, key, val) 
 var hlsrecord = require('noptify')(process.argv, { program: 'hlsrecord <url>' });
 hlsrecord.version(require('../package').version)
    .option('collect', '-C', 'Collect output segments to a single file', Boolean)
-   .option('output', '-o', 'Output directory', path)
+   .option('output', '-o', 'Output directory', String)
    .option('create-dir', '-c', 'Explicitly create output dir', Boolean)
    .option('begin-date', '-b', 'Start recording at', DateValue)
    .option('end-date', '-e', 'Stop recording at', DateValue)
