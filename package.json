@@ -35,11 +35,12 @@
     "mkdirp": "^0.5.0",
     "noptify": "0.0.3",
     "oncemore": "^1.0.0",
+    "pati": "^1.1.0",
     "readable-stream": "^2.0.2",
     "stream-each": "^1.1.2",
     "udp-blast": "^1.0.0",
     "uristream": "^2.0.0",
-    "write-file-atomic": "^1.1.0"
+    "write-file-atomic": "^2.3.0"
   },
   "devDependencies": {},
   "engines": {
