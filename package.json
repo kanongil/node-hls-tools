@@ -27,6 +27,7 @@
   "license": "BSD-2-Clause",
   "dependencies": {
     "aws-sdk": "^2.179.0",
+    "bounce": "^1.2.0",
     "commander": "^2.3.0",
     "debug": "^2.0.0",
     "hls-segment-reader": "^4.0.1",
@@ -35,7 +36,6 @@
     "mime-types": "^2.0.1",
     "mkdirp": "^0.5.0",
     "noptify": "0.0.3",
-    "oncemore": "^1.0.0",
     "pati": "^1.1.0",
     "readable-stream": "^2.0.2",
     "stream-each": "^1.1.2",
@@ -45,6 +45,6 @@
   },
   "devDependencies": {},
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=8.9.0"
   }
 }

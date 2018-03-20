@@ -36,8 +36,9 @@ hlsdump.version('0.0.0')
 var fs = require('fs'),
     http = require('http');
 
-var oncemore = require('oncemore'),
-    HlsSegmentReader = require('hls-segment-reader'),
+const Bounce = require('bounce');
+var HlsSegmentReader = require('hls-segment-reader'),
+    Pati = require('pati'),
     UdpBlast = require('udp-blast');
 var HlsReader = require('../lib/hls-reader');
 
@@ -49,8 +50,9 @@ if (!src) {
 
 if (hlsdump.bufferSize) hlsdump.sync = true;
 
-var segmentReader = new HlsSegmentReader(src, { withData: true, highWaterMark: (hlsdump.concurrent || 1) - 1, fullStream: hlsdump.fullStream });
-var r = new HlsReader(segmentReader, hlsdump);
+const segmentReader = new HlsSegmentReader(src, { withData: true, highWaterMark: (hlsdump.concurrent || 1) - 1, fullStream: hlsdump.fullStream });
+const reader = new HlsReader(segmentReader, hlsdump);
+const r = new Pati.EventDispatcher(reader);
 
 segmentReader.once('index', function() {
   // wait until first index is returned before attaching error listener.
@@ -62,28 +64,31 @@ segmentReader.once('index', function() {
 
 if (hlsdump.udp) {
   var dst = (hlsdump.udp === true) ? null : hlsdump.udp;
-  r.pipe(new UdpBlast(dst, { packetSize: 7 * 188 }));
+  reader.pipe(new UdpBlast(dst, { packetSize: 7 * 188 }));
 }
 
 if (hlsdump.output) {
   if (hlsdump.output === '-')
-    r.pipe(process.stdout);
+    reader.pipe(process.stdout);
   else
-    r.pipe(fs.createWriteStream(hlsdump.output));
+    reader.pipe(fs.createWriteStream(hlsdump.output));
 }
 
 var startTime = process.hrtime();
-r.on('ready', function() {
-  var delay = process.hrtime(startTime);
+r.on('ready', () => {
+
+  const delay = process.hrtime(startTime);
   console.error('"ready" after delay of ' + (delay[0] * 1e3 + delay[1] / 1e6).toFixed(2) + 'ms');
 });
 
-r.on('end', function() {
-  console.error('stream complete');
-})
+r.on('end', () => {
 
-var totalDuration = 0;
-r.on('segment', function(segmentInfo) {
+  r.end();
+});
+
+let totalDuration = 0;
+r.on('segment', (segmentInfo) => {
+
   var downloadSize = segmentInfo.file.size;
   var duration = segmentInfo.segment ? segmentInfo.segment.details.duration : 0;
   totalDuration += duration;
@@ -96,7 +101,17 @@ r.on('segment', function(segmentInfo) {
     });
   }
 
-  oncemore(segmentInfo.stream).once('close', 'end', 'error', function(/*err*/) {
+  const dispatcher = new Pati.EventDispatcher(segmentInfo.stream);
+  dispatcher.on('end', Pati.EventDispatcher.end);
+  dispatcher.on('close', Pati.EventDispatcher.end);
+
+  Bounce.background(async () => {
+
+    try {
+      await dispatcher.finish();
+    }
+    catch (err) { /* ignore */ }
+
     console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
   });
 });
@@ -106,21 +121,36 @@ if (hlsdump.infoPort) {
   var currentSegment = -1;
 
   // setup stat tracking
-  stats.gauge('bufferBytes', function() { return r.buffer._readableState.length/* + buffer._writableState.length*/; });
+  stats.gauge('bufferBytes', function() { return reader.buffer._readableState.length/* + buffer._writableState.length*/; });
   stats.gauge('currentSegment', function() { return currentSegment; });
   stats.gauge('index.first', function() { return segmentReader.index ? segmentReader.index.first_seq_no : -1; });
   stats.gauge('index.last', function() { return segmentReader.index ? segmentReader.index.lastSeqNo() : -1; });
   stats.gauge('totalDuration', function() { return totalDuration; });
 
-  stats.meter('streamErrors');
+  stats.timer('fetchTime').unref();
+  stats.meter('streamErrors').unref();
 
-  r.on('segment', function(segmentInfo) {
+  r.on('segment', (segmentInfo) => {
+
     currentSegment = segmentInfo.segment && segmentInfo.segment.seq;
 
-    var stopwatch = stats.timer('fetchTime').start();
-    oncemore(segmentInfo.stream).once('close', 'end', 'error', function(err) {
-      stopwatch.end();
-      if (err) stats.meter('streamErrors').mark();
+    const stopwatch = stats.timer('fetchTime').start();
+
+    const dispatcher = new Pati.EventDispatcher(segmentInfo.stream);
+    dispatcher.on('end', Pati.EventDispatcher.end);
+    dispatcher.on('close', Pati.EventDispatcher.end);
+
+    Bounce.background(async () => {
+
+      try {
+        await dispatcher.finish();
+      }
+      catch (err) {
+        stats.meter('streamErrors').mark();
+      }
+      finally {
+        stopwatch.end();
+      }
     });
   });
 
@@ -136,7 +166,19 @@ if (hlsdump.infoPort) {
     res.end();
   }).listen(hlsdump.infoPort);
 
-  oncemore(r).once('end', 'error', function(/*err*/) {
+  const cleanup = () => {
+
     server.close();
-  });
+
+  };
+
+  r.finish().then(() => server.close(), () => server.close());
 }
+
+r.finish().then(() => {
+
+  console.error('stream complete');
+}, (err) => {
+
+  console.error('error', err);
+});
