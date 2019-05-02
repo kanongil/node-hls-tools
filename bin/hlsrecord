@@ -33,7 +33,7 @@ nopt.typeDefs[DateValue] = { type: DateValue, validate: function (data, key, val
 
 function HexValue(){}
 nopt.typeDefs[HexValue] = { type: HexValue, validate: function (data, key, val) {
-  data[key] = new Buffer(val, 'hex');
+  data[key] = Buffer.from(val, 'hex');
 }};
 
 var hlsrecord = require('noptify')(process.argv, { program: 'hlsrecord <url>' });

@@ -30,13 +30,13 @@ hlsdump.version('0.0.0')
    .option('-a, --user-agent <string>', 'HTTP User-Agent')
    .option('-i, --info-port <port>', 'report status using HTTP + json', parseInt)
    .option('--cookie <data>', 'add cookie header to key requests')
-   .option('--key <hex>', 'use oob key for decrypting segments', function(opt) {return new Buffer(opt, 'hex');})
+   .option('--key <hex>', 'use oob key for decrypting segments', function(opt) {return Buffer.from(opt, 'hex');})
    .parse(process.argv);
 
 var fs = require('fs'),
     http = require('http');
 
-const Bounce = require('bounce');
+const Bounce = require('@hapi/bounce');
 var HlsSegmentReader = require('hls-segment-reader'),
     Pati = require('pati'),
     UdpBlast = require('udp-blast');
@@ -117,7 +117,7 @@ r.on('segment', (segmentInfo) => {
 });
 
 if (hlsdump.infoPort) {
-  var stats = require('measured').createCollection();
+  var stats = require('measured-core').createCollection();
   var currentSegment = -1;
 
   // setup stat tracking
