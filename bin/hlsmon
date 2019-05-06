@@ -1,24 +1,25 @@
 #!/usr/bin/env node
 
-"use strict";
+'use strict';
 
-var hlsmon = require('commander');
+const hlsmon = require('commander');
 hlsmon.version('0.0.0')
    .usage('[options] <url>')
    .option('-a', '--user-agent <string>', 'User-Agent')
    .parse(process.argv);
 
-var url = require('url');
+const Url = require('url');
 
-var HlsSegmentReader = require('hls-segment-reader');
+const HlsSegmentReader = require('hls-segment-reader');
 
-var src = process.argv[2];
-var sep = ';';
+const src = process.argv[2];
+const sep = ';';
 
-function monitor(srcUrl) {
-  var r = new HlsSegmentReader(srcUrl, { fullStream:true, withData:false });
+const monitor = function (srcUrl) {
 
-  var contentBytes = function (segmentInfo) {
+  const r = new HlsSegmentReader(srcUrl, { fullStream:true, withData:false });
+
+  const contentBytes = (segmentInfo) => {
 
     if (segmentInfo.type === 'segment') {
       return segmentInfo.segment.details.byterange ? +segmentInfo.segment.details.byterange.length : segmentInfo.file.size;
@@ -31,31 +32,34 @@ function monitor(srcUrl) {
     return segmentInfo.file.size;
   };
 
-  var time = 0;
-  r.on('data', function (segmentInfo) {
-    var meta = segmentInfo.file;
-    var size = contentBytes(segmentInfo);
-    var duration = +(segmentInfo.segment && segmentInfo.segment.details.duration);
+  r.on('data', (segmentInfo) => {
+
+    const meta = segmentInfo.file;
+    const size = contentBytes(segmentInfo);
+    const duration = +(segmentInfo.segment && segmentInfo.segment.details.duration);
     console.log(meta.modified.toJSON() + sep + size + sep + duration.toFixed(3) + sep + (size / (duration * 1024 / 8)).toFixed(3));
-    time += duration;
   });
 
-  r.once('index', function() {
+  r.once('index', () => {
+
     // wait until first index is returned before attaching error listener.
     // this will enable initials errors to throw
-    r.on('error', function(err) {
+    r.on('error', (err) => {
+
       console.error('reader error', err.stack || err);
     });
   });
 
-  r.on('end', function() {
+  r.on('end', () => {
+
     if (r.index && r.index.master) {
-      var newUrl = url.resolve(r.baseUrl, r.index.variants[0].uri);
+      const newUrl = Url.resolve(r.baseUrl, r.index.variants[0].uri);
       console.error('found variant index, using: ', newUrl);
       return monitor(newUrl);
     }
+
     console.error('done');
   });
-}
+};
 
 monitor(src);

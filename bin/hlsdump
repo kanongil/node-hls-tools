@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
 /* eslint-disable no-process-exit */
-"use strict";
+'use strict';
 
-var hlsdump = require('commander');
+const hlsdump = require('commander');
 hlsdump.version('0.0.0')
    .usage('[options] <url>')
    .option('-o, --output <path>', 'target file')
-   .option('-u, --udp [host:port]', 'relay TS over UDP', function(val) {
-     var r = { host: 'localhost', port: 1234 };
+   .option('-u, --udp [host:port]', 'relay TS over UDP', (val) => {
+
+     const r = { host: 'localhost', port: 1234 };
      if (val) {
-       var s = val.split(':');
+       const s = val.split(':');
        if (s.length === 1) {
          r.port = parseInt(s[0], 10);
        } else {
@@ -20,7 +21,8 @@ hlsdump.version('0.0.0')
      }
      return r;
    })
-   .option('-b, --buffer-size <bytes>|full', 'try to buffer <bytes> of input data (implies -s)', function(val) {
+   .option('-b, --buffer-size <bytes>|full', 'try to buffer <bytes> of input data (implies -s)', (val) => {
+
      if (val === 'full') return 0x80000000 - 1;
      return parseInt(val, 0);
    })
@@ -30,19 +32,22 @@ hlsdump.version('0.0.0')
    .option('-a, --user-agent <string>', 'HTTP User-Agent')
    .option('-i, --info-port <port>', 'report status using HTTP + json', parseInt)
    .option('--cookie <data>', 'add cookie header to key requests')
-   .option('--key <hex>', 'use oob key for decrypting segments', function(opt) {return Buffer.from(opt, 'hex');})
+   .option('--key <hex>', 'use oob key for decrypting segments', (opt) => Buffer.from(opt, 'hex'))
    .parse(process.argv);
 
-var fs = require('fs'),
-    http = require('http');
+
+const Fs = require('fs');
+const Http = require('http');
 
 const Bounce = require('@hapi/bounce');
-var HlsSegmentReader = require('hls-segment-reader'),
-    Pati = require('pati'),
-    UdpBlast = require('udp-blast');
-var HlsReader = require('../lib/hls-reader');
+const HlsSegmentReader = require('hls-segment-reader');
+const Pati = require('pati');
+const UdpBlast = require('udp-blast');
 
-var src = hlsdump.args[0];
+const HlsReader = require('../lib/hls-reader');
+
+
+const src = hlsdump.args[0];
 if (!src) {
   hlsdump.help();
   process.exit(-1);
@@ -54,16 +59,18 @@ const segmentReader = new HlsSegmentReader(src, { withData: true, highWaterMark:
 const reader = new HlsReader(segmentReader, hlsdump);
 const r = new Pati.EventDispatcher(reader);
 
-segmentReader.once('index', function() {
+segmentReader.once('index', () => {
+
   // wait until first index is returned before attaching error listener.
   // this will enable initials errors to throw
-  segmentReader.on('error', function(err) {
+  segmentReader.on('error', (err) => {
+
     console.error('reader error', err.stack || err);
   });
 });
 
 if (hlsdump.udp) {
-  var dst = (hlsdump.udp === true) ? null : hlsdump.udp;
+  const dst = (hlsdump.udp === true) ? null : hlsdump.udp;
   reader.pipe(new UdpBlast(dst, { packetSize: 7 * 188 }));
 }
 
@@ -71,10 +78,10 @@ if (hlsdump.output) {
   if (hlsdump.output === '-')
     reader.pipe(process.stdout);
   else
-    reader.pipe(fs.createWriteStream(hlsdump.output));
+    reader.pipe(Fs.createWriteStream(hlsdump.output));
 }
 
-var startTime = process.hrtime();
+const startTime = process.hrtime();
 r.on('ready', () => {
 
   const delay = process.hrtime(startTime);
@@ -89,14 +96,16 @@ r.on('end', () => {
 let totalDuration = 0;
 r.on('segment', (segmentInfo) => {
 
-  var downloadSize = segmentInfo.file.size;
-  var duration = segmentInfo.segment ? segmentInfo.segment.details.duration : 0;
+  const duration = segmentInfo.segment ? segmentInfo.segment.details.duration : 0;
+  let downloadSize = segmentInfo.file.size;
+
   totalDuration += duration;
 
   // calculate size when missing
   if (downloadSize === -1) {
     downloadSize = 0;
-    segmentInfo.stream.on('data', function(chunk) {
+    segmentInfo.stream.on('data', (chunk) => {
+
       downloadSize += chunk.length;
     });
   }
@@ -117,15 +126,15 @@ r.on('segment', (segmentInfo) => {
 });
 
 if (hlsdump.infoPort) {
-  var stats = require('measured-core').createCollection();
-  var currentSegment = -1;
+  const stats = require('measured-core').createCollection();
+  let currentSegment = -1;
 
   // setup stat tracking
-  stats.gauge('bufferBytes', function() { return reader.buffer._readableState.length/* + buffer._writableState.length*/; });
-  stats.gauge('currentSegment', function() { return currentSegment; });
-  stats.gauge('index.first', function() { return segmentReader.index ? segmentReader.index.first_seq_no : -1; });
-  stats.gauge('index.last', function() { return segmentReader.index ? segmentReader.index.lastSeqNo() : -1; });
-  stats.gauge('totalDuration', function() { return totalDuration; });
+  stats.gauge('bufferBytes', () => reader.buffer._readableState.length/* + buffer._writableState.length*/);
+  stats.gauge('currentSegment', () => currentSegment);
+  stats.gauge('index.first', () => segmentReader.index ? segmentReader.index.first_seq_no : -1);
+  stats.gauge('index.last', () => segmentReader.index ? segmentReader.index.lastSeqNo() : -1);
+  stats.gauge('totalDuration', () => totalDuration);
 
   stats.timer('fetchTime').unref();
   stats.meter('streamErrors').unref();
@@ -154,22 +163,23 @@ if (hlsdump.infoPort) {
     });
   });
 
-  var server = http.createServer(function (req, res) {
+  const server = Http.createServer((req, res) => {
+
     if (req.method === 'GET') {
-      var data = JSON.stringify(stats, null, ' ');
+      const data = JSON.stringify(stats, null, ' ');
       res.writeHead(200, {
         'Content-Type': 'application/json',
         'Content-Length': data.length
       });
       res.write(data);
     }
+
     res.end();
   }).listen(hlsdump.infoPort);
 
   const cleanup = () => {
 
     server.close();
-
   };
 
   r.finish().then(() => server.close(), () => server.close());

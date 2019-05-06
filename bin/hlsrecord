@@ -1,24 +1,23 @@
 #!/usr/bin/env node
 
 /* eslint-disable no-process-exit */
-"use strict";
+'use strict';
 
 // record a live hls-stream storing an on-demand ready version
 
-var fs = require('fs');
-var nopt;
+const Fs = require('fs');
 try {
-  nopt = require('noptify/node_modules/nopt');
+  var nopt = require('noptify/node_modules/nopt');
 } catch (e) {
   nopt = require('nopt');
 }
 
-var HlsSegmentReader = require('hls-segment-reader');
-var recorder = require('../lib/recorder');
+const HlsSegmentReader = require('hls-segment-reader');
+const Recorder = require('../lib/recorder');
 
-function DateValue(){}
-nopt.typeDefs[DateValue] = { type: DateValue, validate: function (data, key, val) {
-  var date;
+const DateValue = function () {};
+nopt.typeDefs[DateValue] = { type: DateValue, validate(data, key, val) {
+  let date;
   if (val === 'now') val = '+0';
   if (val.length && (val[0] === '+' || val[0] === '-')) {
     date = new Date(Math.round(new Date().getTime() / 1000 + parseInt(val, 10)) * 1000);
@@ -27,16 +26,17 @@ nopt.typeDefs[DateValue] = { type: DateValue, validate: function (data, key, val
   } else {
     date = new Date(val);
   }
+
   if (!date) return false;
   data[key] = date;
 }};
 
-function HexValue(){}
-nopt.typeDefs[HexValue] = { type: HexValue, validate: function (data, key, val) {
+const HexValue = function () {};
+nopt.typeDefs[HexValue] = { type: HexValue, validate(data, key, val) {
   data[key] = Buffer.from(val, 'hex');
 }};
 
-var hlsrecord = require('noptify')(process.argv, { program: 'hlsrecord <url>' });
+const hlsrecord = require('noptify')(process.argv, { program: 'hlsrecord <url>' });
 hlsrecord.version(require('../package').version)
    .option('collect', '-C', 'Collect output segments to a single file', Boolean)
    .option('output', '-o', 'Output directory', String)
@@ -44,7 +44,6 @@ hlsrecord.version(require('../package').version)
    .option('begin-date', '-b', 'Start recording at', DateValue)
    .option('end-date', '-e', 'Stop recording at', DateValue)
    .option('start-offset', '-s', 'Playback start time offset in seconds', Number)
-   .option('create-dir', '-c', 'Explicitly create output dir', Boolean)
    .option('extension', 'Preserve specified vendor extension', Array)
    .option('segment-extension', 'Preserve specified vendor segment extension', Array)
    .option('user-agent', '-a', 'HTTP User-Agent', String)
@@ -54,49 +53,54 @@ hlsrecord.version(require('../package').version)
 //   .option('-f, --full', 'record all variants')
    .parse(process.argv);
 
-var options = hlsrecord.nopt;
-var src = options.argv.remain[0];
+const options = hlsrecord.nopt;
+const src = options.argv.remain[0];
 if (!src) {
   hlsrecord.help();
   process.exit(-1);
 }
 
-var outDir = options.output || 'stream';
+const outDir = options.output || 'stream';
 if (options['create-dir'])
-  fs.mkdirSync(outDir);
+  Fs.mkdirSync(outDir);
 
 if (options['begin-date'])
   console.log('fetching from:', options['begin-date']);
 if (options['end-date'])
   console.log('fetching until:', options['end-date']);
 
-var extensions = {};
-(options.extension || []).forEach(function(ext) {
+const extensions = {};
+(options.extension || []).forEach((ext) => {
+
   extensions[ext] = false;
 });
-(options['segment-extension'] || []).forEach(function(ext) {
+(options['segment-extension'] || []).forEach((ext) => {
+
   extensions[ext] = true;
 });
 
-var readerOptions = {
+const readerOptions = {
   withData: true,
   fullStream: !options['begin-date'],
   startDate: options['begin-date'],
   stopDate: options['end-date'],
   maxStallTime: 5 * 60 * 1000,
-  extensions: extensions,
+  extensions,
   highWaterMark: 0,
 };
 
-function createReader(src) {
-  var r = new HlsSegmentReader(src, readerOptions);
-  r.on('error', function(err) {
+const createReader = (src) => {
+
+  const r = new HlsSegmentReader(src, readerOptions);
+  r.on('error', (err) => {
+
     console.error('reader error', err);
   });
-  return r;
-}
 
-var decrypt = null;
+  return r;
+};
+
+let decrypt = null;
 if (options.decrypt) {
   decrypt = {
     cookie: options.cookie,
@@ -104,5 +108,5 @@ if (options.decrypt) {
   };
 }
 
-var rdr = createReader(src);
-recorder(rdr, outDir, { subreader:createReader, startOffset: options['start-offset'], collect: options.collect, decrypt: decrypt }).start();
+const rdr = createReader(src);
+Recorder(rdr, outDir, { subreader:createReader, startOffset: options['start-offset'], collect: options.collect, decrypt }).start();
