@@ -8,58 +8,53 @@ hlsmon.version('0.0.0')
    .option('-a', '--user-agent <string>', 'User-Agent')
    .parse(process.argv);
 
-const Url = require('url');
-
-const HlsSegmentReader = require('hls-segment-reader');
-
 const src = process.argv[2];
 const sep = ';';
 
-const monitor = function (srcUrl) {
+const contentBytes = (segmentInfo) => {
 
-  const r = new HlsSegmentReader(srcUrl, { fullStream:true, withData:false });
+  if (segmentInfo.type === 'segment') {
+    return segmentInfo.segment.entry.byterange ? +segmentInfo.segment.entry.byterange.length : segmentInfo.file.size;
+  }
 
-  const contentBytes = (segmentInfo) => {
+  if (segmentInfo.type === 'init') {
+    return segmentInfo.init.byterange ? parseInt(segmentInfo.init.quotedString('byterange'), 10) : segmentInfo.file.size;
+  }
 
-    if (segmentInfo.type === 'segment') {
-      return segmentInfo.segment.details.byterange ? +segmentInfo.segment.details.byterange.length : segmentInfo.file.size;
+  return segmentInfo.file.size;
+};
+
+const monitor = async function (srcUrl) {
+
+  const { ContentFetcher } = await import('hls-playlist-reader/helpers');
+  const { HlsPlaylistFetcher } = await import('hls-playlist-reader/fetcher');
+  const { HlsSegmentReadable, HlsSegmentStreamer } = await import('hls-segment-reader');
+  const { HlsSegmentFetcher } = await import('hls-segment-reader/lib/segment-fetcher.js');
+
+  const playlistFetcher = new HlsPlaylistFetcher(srcUrl, new ContentFetcher() , { lowLatency: false });
+  const r = new HlsSegmentReadable(new HlsSegmentFetcher(playlistFetcher, { fullStream: true }));
+
+  const { index } = await playlistFetcher.index();
+  if (index && index.master) {
+    const newUrl = new URL(index.variants[0].uri, playlistFetcher.baseUrl);
+    console.error('found variant index, using:', newUrl.href);
+    return monitor(newUrl);
+  }
+
+  const s = new HlsSegmentStreamer(r, { withData: false });
+  try {
+    for await (const segmentInfo of s) {
+      const meta = segmentInfo.file;
+      const size = contentBytes(segmentInfo);
+      const duration = +(segmentInfo.segment && segmentInfo.segment.entry.duration);
+      console.log(meta.modified.toJSON() + sep + size + sep + duration.toFixed(3) + sep + (size / (duration * 1024 / 8)).toFixed(3));
     }
+  }
+  catch (err) {
+    console.error('streamer error', err.stack || err);
+  }
 
-    if (segmentInfo.type === 'init') {
-      return segmentInfo.init.byterange ? parseInt(segmentInfo.init.quotedString('byterange'), 10): segmentInfo.file.size;
-    }
-
-    return segmentInfo.file.size;
-  };
-
-  r.on('data', (segmentInfo) => {
-
-    const meta = segmentInfo.file;
-    const size = contentBytes(segmentInfo);
-    const duration = +(segmentInfo.segment && segmentInfo.segment.details.duration);
-    console.log(meta.modified.toJSON() + sep + size + sep + duration.toFixed(3) + sep + (size / (duration * 1024 / 8)).toFixed(3));
-  });
-
-  r.once('index', () => {
-
-    // wait until first index is returned before attaching error listener.
-    // this will enable initials errors to throw
-    r.on('error', (err) => {
-
-      console.error('reader error', err.stack || err);
-    });
-  });
-
-  r.on('end', () => {
-
-    if (r.index && r.index.master) {
-      const newUrl = Url.resolve(r.baseUrl, r.index.variants[0].uri);
-      console.error('found variant index, using: ', newUrl);
-      return monitor(newUrl);
-    }
-
-    console.error('done');
-  });
+  console.error('done');
 };
 
 monitor(src);

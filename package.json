@@ -7,17 +7,15 @@
     "m3u8",
     "streaming"
   ],
-  "main": "index.js",
   "scripts": {
-    "test": "mocha -R list"
+    "test": "echo 'No tests' && exit 1"
   },
   "directories": {
     "test": "test"
   },
   "bin": {
     "hlsdump": "./bin/hlsdump",
-    "hlsmon": "./bin/hlsmon",
-    "hlsrecord": "./bin/hlsrecord"
+    "hlsmon": "./bin/hlsmon"
   },
   "repository": {
     "type": "git",
@@ -26,20 +24,16 @@
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD-2-Clause",
   "dependencies": {
-    "@hapi/bounce": "^3.0.0",
     "commander": "^10.0.0",
     "debug": "^4.1.1",
-    "hls-playlist-reader": "^3.0.0-beta.1",
-    "hls-segment-reader": "file:../node-hls-segment-reader",
+    "hls-playlist-reader": "^3.0.0",
+    "hls-segment-reader": "github:kanongil/hls-segment-reader#next",
     "measured-core": "^1.41.0",
     "pati": "^1.1.2",
     "udp-blast": "^2.0.0",
     "uristream": "^6.3.1"
   },
   "engines": {
-    "node": ">=14.17.0"
-  },
-  "devDependencies": {
-    "m3u8parse": "^4.0.0-rc4"
+    "node": ">=16.17.0"
   }
 }

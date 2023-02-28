@@ -38,8 +38,8 @@ hlsdump.version('0.0.0')
 
 const Fs = require('fs');
 const Http = require('http');
+const { finished } = require('stream/promises');
 
-const Bounce = require('@hapi/bounce');
 const Pati = require('pati');
 const UdpBlast = require('udp-blast');
 
@@ -106,26 +106,22 @@ const UdpBlast = require('udp-blast');
   let totalDuration = 0;
   r.on('segment', (/** @type {import("hls-segment-reader").HlsStreamerObject} */segmentInfo) => {
 
-    const duration = segmentInfo.segment ? segmentInfo.segment.entry.duration : 0;
-    let downloadSize = segmentInfo.file.size;
+    let downloadSize = 0;
 
-    totalDuration += duration;
+    segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
 
     // TODO: use a completed property instead
 
-    const dispatcher = new Pati.EventDispatcher(segmentInfo.stream);
-    dispatcher.on('end', Pati.EventDispatcher.end);
-    dispatcher.on('close', Pati.EventDispatcher.end);
+    finished(segmentInfo.stream)
+      .catch(() => undefined)
+      .then(() => {
 
-    Bounce.background(async () => {
+        const duration = segmentInfo.segment?.entry.duration ?? 0;
 
-      try {
-        await dispatcher.finish();
-      }
-      catch (err) { /* ignore */ }
+        totalDuration += duration;
 
-      console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
-    });
+        console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
+      });
   });
 
   if (options.infoPort) {
@@ -148,22 +144,12 @@ const UdpBlast = require('udp-blast');
 
       const stopwatch = stats.timer('fetchTime').start();
 
-      const dispatcher = new Pati.EventDispatcher(segmentInfo.fetch.stream);
-      dispatcher.on('end', Pati.EventDispatcher.end);
-      dispatcher.on('close', Pati.EventDispatcher.end);
+      finished(segmentInfo.stream)
+        .catch(() => {
 
-      Bounce.background(async () => {
-
-        try {
-          await dispatcher.finish();
-        }
-        catch (err) {
           stats.meter('streamErrors').mark();
-        }
-        finally {
-          stopwatch.end();
-        }
-      });
+        })
+        .finally(() => stopwatch.end());
     });
 
     const server = Http.createServer((req, res) => {
@@ -185,7 +171,7 @@ const UdpBlast = require('udp-blast');
       server.close();
     };
 
-    r.finish().then(() => server.close(), () => server.close());
+    r.finish().finally(cleanup);
   }
 
   r.finish().then(() => {
