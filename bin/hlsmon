@@ -1,60 +1,30 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-process-exit */
 'use strict';
 
 const hlsmon = require('commander');
 hlsmon.version('0.0.0')
-   .usage('[options] <url>')
-   .option('-a', '--user-agent <string>', 'User-Agent')
-   .parse(process.argv);
+  .usage('[options] <url>')
+  //.option('-a', '--user-agent <string>', 'User-Agent')
+  .parse(process.argv);
 
-const src = process.argv[2];
-const sep = ';';
+const src = hlsmon.args[0];
+if (!src) {
+  hlsmon.help();
+  process.exit(-1);
+}
 
-const contentBytes = (segmentInfo) => {
+(async () => {
 
-  if (segmentInfo.type === 'segment') {
-    return segmentInfo.segment.entry.byterange ? +segmentInfo.segment.entry.byterange.length : segmentInfo.file.size;
-  }
-
-  if (segmentInfo.type === 'init') {
-    return segmentInfo.init.byterange ? parseInt(segmentInfo.init.quotedString('byterange'), 10) : segmentInfo.file.size;
-  }
-
-  return segmentInfo.file.size;
-};
-
-const monitor = async function (srcUrl) {
-
-  const { ContentFetcher } = await import('hls-playlist-reader/helpers');
-  const { HlsPlaylistFetcher } = await import('hls-playlist-reader/fetcher');
-  const { HlsSegmentReadable, HlsSegmentStreamer } = await import('hls-segment-reader');
-  const { HlsSegmentFetcher } = await import('hls-segment-reader/lib/segment-fetcher.js');
-
-  const playlistFetcher = new HlsPlaylistFetcher(srcUrl, new ContentFetcher() , { lowLatency: false });
-  const r = new HlsSegmentReadable(new HlsSegmentFetcher(playlistFetcher, { fullStream: true }));
-
-  const { index } = await playlistFetcher.index();
-  if (index && index.master) {
-    const newUrl = new URL(index.variants[0].uri, playlistFetcher.baseUrl);
-    console.error('found variant index, using:', newUrl.href);
-    return monitor(newUrl);
-  }
-
-  const s = new HlsSegmentStreamer(r, { withData: false });
   try {
-    for await (const segmentInfo of s) {
-      const meta = segmentInfo.file;
-      const size = contentBytes(segmentInfo);
-      const duration = +(segmentInfo.segment && segmentInfo.segment.entry.duration);
-      console.log(meta.modified.toJSON() + sep + size + sep + duration.toFixed(3) + sep + (size / (duration * 1024 / 8)).toFixed(3));
-    }
+    const { monitor } = await import('../lib/hlsmon.mjs');
+
+    await monitor(src, hlsmon.opts());
   }
   catch (err) {
-    console.error('streamer error', err.stack || err);
+    return console.error('FAILED', err);
   }
 
   console.error('done');
-};
-
-monitor(src);
+})();
