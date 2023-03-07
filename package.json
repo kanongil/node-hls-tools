@@ -26,12 +26,12 @@
   "dependencies": {
     "commander": "^10.0.0",
     "debug": "^4.1.1",
-    "hls-playlist-reader": "^3.0.0",
+    "hls-playlist-reader": "^3.0.3",
     "hls-segment-reader": "github:kanongil/hls-segment-reader#next",
     "measured-core": "^1.41.0",
     "pati": "^1.1.2",
     "udp-blast": "^2.0.0",
-    "uristream": "^6.3.1"
+    "uristream": "^6.3.2"
   },
   "engines": {
     "node": ">=16.17.0"
