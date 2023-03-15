@@ -287,7 +287,7 @@
     },
     "node_modules/hls-segment-reader": {
       "version": "8.0.1",
-      "resolved": "git+ssh://git@github.com/kanongil/hls-segment-reader.git#f2e7afe0866c6aa7c73b28b23a82b4a0c2a5fac5",
+      "resolved": "git+ssh://git@github.com/kanongil/hls-segment-reader.git#dbbf2db16ceca5b3fa2c5177edbcf245759f957b",
       "license": "BSD-2-Clause",
       "dependencies": {
         "@hapi/hoek": "^10.0.0",
