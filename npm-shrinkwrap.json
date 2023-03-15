@@ -12,7 +12,7 @@
         "commander": "^10.0.0",
         "debug": "^4.1.1",
         "hls-playlist-reader": "^3.0.3",
-        "hls-segment-reader": "github:kanongil/hls-segment-reader#next",
+        "hls-segment-reader": "^9.0.0-beta.1",
         "measured-core": "^1.41.0",
         "pati": "^1.1.2",
         "udp-blast": "^2.0.0",
@@ -286,12 +286,12 @@
       }
     },
     "node_modules/hls-segment-reader": {
-      "version": "8.0.1",
-      "resolved": "git+ssh://git@github.com/kanongil/hls-segment-reader.git#dbbf2db16ceca5b3fa2c5177edbcf245759f957b",
-      "license": "BSD-2-Clause",
+      "version": "9.0.0-beta.1",
+      "resolved": "https://registry.npmjs.org/hls-segment-reader/-/hls-segment-reader-9.0.0-beta.1.tgz",
+      "integrity": "sha512-HI0Y+OOoEBYD0J3ZROeShud0m6H9XHjFiNZVwUZWr1fdkHcu/NyVBatzeuhcKhgUsyKi9grSn0RFS35awx1Tyg==",
       "dependencies": {
         "@hapi/hoek": "^10.0.0",
-        "hls-playlist-reader": "^3.0.1",
+        "hls-playlist-reader": "^3.0.3",
         "m3u8parse": "^4.0.0"
       },
       "engines": {
