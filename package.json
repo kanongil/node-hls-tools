@@ -30,7 +30,7 @@
     "hls-segment-reader": "^9.0.0-beta.1",
     "measured-core": "^1.41.0",
     "pati": "^1.1.2",
-    "udp-blast": "^2.0.0",
+    "udp-blast": "^3.0.0",
     "uristream": "^6.3.2"
   },
   "engines": {

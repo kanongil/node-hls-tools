@@ -15,7 +15,7 @@
         "hls-segment-reader": "^9.0.0-beta.1",
         "measured-core": "^1.41.0",
         "pati": "^1.1.2",
-        "udp-blast": "^2.0.0",
+        "udp-blast": "^3.0.0",
         "uristream": "^6.3.2"
       },
       "bin": {
@@ -96,6 +96,17 @@
         "@types/node": "*"
       }
     },
+    "node_modules/abort-controller": {
+      "version": "3.0.0",
+      "resolved": "https://registry.npmjs.org/abort-controller/-/abort-controller-3.0.0.tgz",
+      "integrity": "sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==",
+      "dependencies": {
+        "event-target-shim": "^5.0.0"
+      },
+      "engines": {
+        "node": ">=6.5"
+      }
+    },
     "node_modules/agentkeepalive": {
       "version": "4.3.0",
       "resolved": "https://registry.npmjs.org/agentkeepalive/-/agentkeepalive-4.3.0.tgz",
@@ -109,15 +120,60 @@
         "node": ">= 8.0.0"
       }
     },
+    "node_modules/base64-js": {
+      "version": "1.5.1",
+      "resolved": "https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz",
+      "integrity": "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/feross"
+        },
+        {
+          "type": "patreon",
+          "url": "https://www.patreon.com/feross"
+        },
+        {
+          "type": "consulting",
+          "url": "https://feross.org/support"
+        }
+      ]
+    },
     "node_modules/binary-search": {
       "version": "1.3.6",
       "license": "CC0-1.0"
     },
     "node_modules/bl": {
-      "version": "3.0.1",
-      "license": "MIT",
+      "version": "6.0.0",
+      "resolved": "https://registry.npmjs.org/bl/-/bl-6.0.0.tgz",
+      "integrity": "sha512-Ik9BVIMdcWzSOCpzDv2XpQ4rJ4oZBuk3ck6MgiOv0EopdgtohN2uSCrrLlkH1Jf0KnpZZMBA3D0bUMbCdj/jgA==",
       "dependencies": {
-        "readable-stream": "^3.0.1"
+        "buffer": "^6.0.3",
+        "inherits": "^2.0.4",
+        "readable-stream": "^4.2.0"
+      }
+    },
+    "node_modules/buffer": {
+      "version": "6.0.3",
+      "resolved": "https://registry.npmjs.org/buffer/-/buffer-6.0.3.tgz",
+      "integrity": "sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/feross"
+        },
+        {
+          "type": "patreon",
+          "url": "https://www.patreon.com/feross"
+        },
+        {
+          "type": "consulting",
+          "url": "https://feross.org/support"
+        }
+      ],
+      "dependencies": {
+        "base64-js": "^1.3.1",
+        "ieee754": "^1.2.1"
       }
     },
     "node_modules/cacheable-lookup": {
@@ -232,6 +288,22 @@
         "once": "^1.4.0"
       }
     },
+    "node_modules/event-target-shim": {
+      "version": "5.0.1",
+      "resolved": "https://registry.npmjs.org/event-target-shim/-/event-target-shim-5.0.1.tgz",
+      "integrity": "sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==",
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/events": {
+      "version": "3.3.0",
+      "resolved": "https://registry.npmjs.org/events/-/events-3.3.0.tgz",
+      "integrity": "sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==",
+      "engines": {
+        "node": ">=0.8.x"
+      }
+    },
     "node_modules/get-stream": {
       "version": "5.2.0",
       "resolved": "https://registry.npmjs.org/get-stream/-/get-stream-5.2.0.tgz",
@@ -323,15 +395,36 @@
         "ms": "^2.0.0"
       }
     },
+    "node_modules/ieee754": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/ieee754/-/ieee754-1.2.1.tgz",
+      "integrity": "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/feross"
+        },
+        {
+          "type": "patreon",
+          "url": "https://www.patreon.com/feross"
+        },
+        {
+          "type": "consulting",
+          "url": "https://feross.org/support"
+        }
+      ]
+    },
     "node_modules/inherits": {
       "version": "2.0.4",
-      "license": "ISC"
+      "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz",
+      "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
     },
     "node_modules/ipaddr.js": {
-      "version": "1.9.1",
-      "license": "MIT",
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/ipaddr.js/-/ipaddr.js-2.0.1.tgz",
+      "integrity": "sha512-1qTgH9NG+IIJ4yfKs2e6Pp1bZg8wbDbKHT21HrLIeYBTRLgMYKnMTPAuI3Lcs61nfx5h1xlXnbJtH1kX5/d/ng==",
       "engines": {
-        "node": ">= 0.10"
+        "node": ">= 10"
       }
     },
     "node_modules/json-buffer": {
@@ -447,6 +540,14 @@
         "node": ">=8.9.0"
       }
     },
+    "node_modules/process": {
+      "version": "0.11.10",
+      "resolved": "https://registry.npmjs.org/process/-/process-0.11.10.tgz",
+      "integrity": "sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==",
+      "engines": {
+        "node": ">= 0.6.0"
+      }
+    },
     "node_modules/pump": {
       "version": "3.0.0",
       "resolved": "https://registry.npmjs.org/pump/-/pump-3.0.0.tgz",
@@ -468,15 +569,17 @@
       }
     },
     "node_modules/readable-stream": {
-      "version": "3.6.0",
-      "license": "MIT",
+      "version": "4.3.0",
+      "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-4.3.0.tgz",
+      "integrity": "sha512-MuEnA0lbSi7JS8XM+WNJlWZkHAAdm7gETHdFK//Q/mChGyj2akEFtdLZh32jSdkWGbRwCW9pn6g3LWDdDeZnBQ==",
       "dependencies": {
-        "inherits": "^2.0.3",
-        "string_decoder": "^1.1.1",
-        "util-deprecate": "^1.0.1"
+        "abort-controller": "^3.0.0",
+        "buffer": "^6.0.3",
+        "events": "^3.3.0",
+        "process": "^0.11.10"
       },
       "engines": {
-        "node": ">= 6"
+        "node": "^12.22.0 || ^14.17.0 || >=16.0.0"
       }
     },
     "node_modules/resolve-alpn": {
@@ -495,41 +598,16 @@
         "url": "https://github.com/sponsors/sindresorhus"
       }
     },
-    "node_modules/safe-buffer": {
-      "version": "5.2.1",
-      "funding": [
-        {
-          "type": "github",
-          "url": "https://github.com/sponsors/feross"
-        },
-        {
-          "type": "patreon",
-          "url": "https://www.patreon.com/feross"
-        },
-        {
-          "type": "consulting",
-          "url": "https://feross.org/support"
-        }
-      ],
-      "license": "MIT"
-    },
-    "node_modules/string_decoder": {
-      "version": "1.3.0",
-      "license": "MIT",
-      "dependencies": {
-        "safe-buffer": "~5.2.0"
-      }
-    },
     "node_modules/udp-blast": {
-      "version": "2.1.0",
-      "license": "BSD-2-Clause",
+      "version": "3.0.0",
+      "resolved": "https://registry.npmjs.org/udp-blast/-/udp-blast-3.0.0.tgz",
+      "integrity": "sha512-L5sE6zFCvYoi5yFAjIDYbaJRzCq1zmEazKVV++llmA55Z7oLJ9KT9iM0jiX/gsbEJ/o5z9wQ/QyGPi6kpmyCoQ==",
       "dependencies": {
-        "bl": "^3.0.0",
-        "ipaddr.js": "^1.8.1",
-        "readable-stream": "^3.3.0"
+        "bl": "^6.0.0",
+        "ipaddr.js": "^2.0.1"
       },
       "engines": {
-        "node": ">=8.9.0"
+        "node": ">=16.17.0"
       }
     },
     "node_modules/uristream": {
@@ -562,10 +640,6 @@
       "version": "9.3.0",
       "resolved": "https://registry.npmjs.org/@hapi/hoek/-/hoek-9.3.0.tgz",
       "integrity": "sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ=="
-    },
-    "node_modules/util-deprecate": {
-      "version": "1.0.2",
-      "license": "MIT"
     },
     "node_modules/wrappy": {
       "version": "1.0.2",
