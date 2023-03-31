@@ -49,7 +49,8 @@ if (!src) {
     await run(src, hlsdump.opts());
   }
   catch (err) {
-    return console.error('FAILED', err);
+    console.error('FAILED', err);
+    process.exit(1);
   }
 
   console.error('stream complete');
