@@ -24,6 +24,7 @@
   "author": "Gil Pedersen <gpdev@gpost.dk>",
   "license": "BSD-2-Clause",
   "dependencies": {
+    "bl": "^6.0.1",
     "commander": "^10.0.0",
     "debug": "^4.1.1",
     "hls-playlist-reader": "^3.0.4",
@@ -32,6 +33,10 @@
     "pati": "^1.1.2",
     "udp-blast": "^3.0.0",
     "uristream": "^6.3.2"
+  },
+  "overrides": {
+    "buffer": "npm:@built-in/buffer@1",
+    "readable-stream": "npm:@built-in/readable-stream@1"
   },
   "engines": {
     "node": ">=16.17.0"
