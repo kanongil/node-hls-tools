@@ -29,8 +29,6 @@
     "debug": "^4.1.1",
     "hls-playlist-reader": "^3.0.4",
     "hls-segment-reader": "^9.0.0-beta.4",
-    "measured-core": "^1.41.0",
-    "pati": "^1.1.2",
     "udp-blast": "^3.0.0",
     "uristream": "^6.3.2"
   },
