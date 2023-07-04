@@ -58,7 +58,7 @@ if (!src) {
       ac.abort(new DOMException('AbortError', 'SIGINT'));
     };
 
-    process.on('SIGINT', exitHandler);    
+    process.on('SIGINT', exitHandler);
 
     // Run it
 
@@ -112,9 +112,11 @@ if (!src) {
         let totalDuration = 0;
         reader.on('segment', (/** @type {import("hls-segment-reader").HlsStreamerObject} */segmentInfo) => {
 
-          let downloadSize = 0;
+          let downloadSize = segmentInfo.file.size >= 0 ? segmentInfo.file.size : 0;
 
-          segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
+          if (!downloadSize) {
+            segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
+          }
 
           // TODO: use a completed property instead
 
