@@ -31,6 +31,7 @@ hlsdump.version('0.0.0')
    .option('-s, --sync', 'clock sync using stream PCR')
    .option('-f, --full-stream', 'fetch all stream data')
    .option('-c, --concurrent <count>', 'fetch using concurrent connections', parseInt)
+   .option('--no-low-latency', 'disable low latency handling')
    .option('--cookie <data>', 'add cookie header to key requests')
    .option('--key <hex>', 'use oob key for decrypting segments', (opt) => Buffer.from(opt, 'hex'))
    .parse(process.argv);
