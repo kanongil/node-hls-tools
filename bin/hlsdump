@@ -7,141 +7,141 @@ const { finished } = require('node:stream/promises');
 
 const hlsdump = require('commander');
 hlsdump.version('0.0.0')
-   .usage('[options] <url>')
-   .option('-o, --output <path>', 'target file')
-   .option('-u, --udp [host:port]', 'relay TS over UDP', (val) => {
+    .usage('[options] <url>')
+    .option('-o, --output <path>', 'target file')
+    .option('-u, --udp [host:port]', 'relay TS over UDP', (val) => {
 
-     const r = { host: 'localhost', port: 1234 };
-     if (val) {
-       const s = val.split(':');
-       if (s.length === 1) {
-         r.port = parseInt(s[0], 10);
-       } else {
-         r.host = s[0];
-         r.port = parseInt(s[1], 10);
-       }
-     }
-     return r;
-   })
-   .option('-b, --buffer-size <bytes>|full', 'try to buffer <bytes> of input data (implies -s)', (val) => {
+        const r = { host: 'localhost', port: 1234 };
+        if (val) {
+            const s = val.split(':');
+            if (s.length === 1) {
+                r.port = parseInt(s[0], 10);
+            } else {
+                r.host = s[0];
+                r.port = parseInt(s[1], 10);
+            }
+        }
+        return r;
+    })
+    .option('-b, --buffer-size <bytes>|full', 'try to buffer <bytes> of input data (implies -s)', (val) => {
 
-     if (val === 'full') return 0x80000000 - 1;
-     return parseInt(val, 0);
-   })
-   .option('-s, --sync', 'clock sync using stream PCR')
-   .option('-f, --full-stream', 'fetch all stream data')
-   .option('-c, --concurrent <count>', 'fetch using concurrent connections', parseInt)
-   .option('--no-low-latency', 'disable low latency handling')
-   .option('--cookie <data>', 'add cookie header to key requests')
-   .option('--key <hex>', 'use oob key for decrypting segments', (opt) => Buffer.from(opt, 'hex'))
-   .parse(process.argv);
+        if (val === 'full') return 0x80000000 - 1;
+        return parseInt(val, 0);
+    })
+    .option('-s, --sync', 'clock sync using stream PCR')
+    .option('-f, --full-stream', 'fetch all stream data')
+    .option('-c, --concurrent <count>', 'fetch using concurrent connections', parseInt)
+    .option('--no-low-latency', 'disable low latency handling')
+    .option('--cookie <data>', 'add cookie header to key requests')
+    .option('--key <hex>', 'use oob key for decrypting segments', (opt) => Buffer.from(opt, 'hex'))
+    .parse(process.argv);
 
 const src = hlsdump.args[0];
 if (!src) {
-  hlsdump.help();
-  process.exit(-1);
+    hlsdump.help();
+    process.exit(-1);
 }
 
 (async () => {
 
-  try {
-    const { run } = await import('../lib/hlsdump.mjs');
+    try {
+        const { run } = await import('../lib/hlsdump.mjs');
 
-    const startTime = performance.now();
+        const startTime = performance.now();
 
-    // Clean exit
+        // Clean exit
 
-    const ac = new AbortController();
-    const exitHandler = () => {
+        const ac = new AbortController();
+        const exitHandler = () => {
 
-      process.removeListener('SIGINT', exitHandler);
-      ac.abort(new DOMException('AbortError', 'SIGINT'));
-    };
+            process.removeListener('SIGINT', exitHandler);
+            ac.abort(new DOMException('AbortError', 'SIGINT'));
+        };
 
-    process.on('SIGINT', exitHandler);
+        process.on('SIGINT', exitHandler);
 
-    // Run it
+        // Run it
 
-    await run(src, {
-      ...hlsdump.opts(),
-      signal: ac.signal,
-      started(reader) {
+        await run(src, {
+            ...hlsdump.opts(),
+            signal: ac.signal,
+            started(reader) {
 
-        reader.on('warning', (err) => console.error('hls-reader issue', err));
+                reader.on('warning', (err) => console.error('hls-reader issue', err));
 
-        reader.on('ready', () => {
+                reader.on('ready', () => {
 
-          // Report "ready" delay
+                    // Report "ready" delay
 
-          const delay = performance.now() - startTime;
-          console.error(`"ready" after delay of ${delay.toFixed(2)} ms`);
+                    const delay = performance.now() - startTime;
+                    console.error(`"ready" after delay of ${delay.toFixed(2)} ms`);
 
-          // Report warnings
+                    // Report warnings
 
-          reader.collector?.on('warning', (err) => console.error('collector issue', err));
-          reader.smoother?.on('warning', (err) => console.error('smoother issue', err));
+                    reader.collector?.on('warning', (err) => console.error('collector issue', err));
+                    reader.smoother?.on('warning', (err) => console.error('smoother issue', err));
 
-          // Regularly report on smoother dropped bytes
+                    // Regularly report on smoother dropped bytes
 
-          const smoother = reader.smoother;
-          if (smoother) {
-            let last = { late: 0, future: 0 };
-            const reporter = setInterval(() => {
+                    const smoother = reader.smoother;
+                    if (smoother) {
+                        let last = { late: 0, future: 0 };
+                        const reporter = setInterval(() => {
 
-              if (smoother.dropped.late !== last.late ||
-                smoother.dropped.future !== last.future) {
+                            if (smoother.dropped.late !== last.late ||
+                                smoother.dropped.future !== last.future) {
 
-                const delta = {
-                  late: smoother.dropped.late - last.late,
-                  future: smoother.dropped.future - last.future
-                };
+                                const delta = {
+                                    late: smoother.dropped.late - last.late,
+                                    future: smoother.dropped.future - last.future
+                                };
 
-                console.error(`bytes dropped: ${JSON.stringify(delta)}`);
+                                console.error(`bytes dropped: ${JSON.stringify(delta)}`);
 
-                last.late = smoother.dropped.late;
-                last.future = smoother.dropped.future;
-              }
-            }, 1000);
+                                last.late = smoother.dropped.late;
+                                last.future = smoother.dropped.future;
+                            }
+                        }, 1000);
 
-            smoother.on('close', () => clearTimeout(reporter));
-          }
+                        smoother.on('close', () => clearTimeout(reporter));
+                    }
+                });
+
+                // Report downloaded segment bitrates
+
+                let totalDuration = 0;
+                reader.on('segment', (/** @type {import("hls-segment-reader").HlsStreamerObject} */segmentInfo) => {
+
+                    let downloadSize = segmentInfo.file.size >= 0 ? segmentInfo.file.size : 0;
+
+                    if (!downloadSize) {
+                        segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
+                    }
+
+                    // TODO: use a completed property instead
+
+                    finished(segmentInfo.stream)
+                        .catch(() => undefined)
+                        .then(() => {
+
+                            const duration = segmentInfo.segment?.entry.duration ?? 0;
+
+                            totalDuration += duration;
+
+                            console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
+                        });
+                });
+            },
+            problem(err) {
+
+                console.error('PROBLEM', err);
+            }
         });
+    }
+    catch (err) {
+        console.error('FAILED', err);
+        process.exit(1);
+    }
 
-        // Report downloaded segment bitrates
-
-        let totalDuration = 0;
-        reader.on('segment', (/** @type {import("hls-segment-reader").HlsStreamerObject} */segmentInfo) => {
-
-          let downloadSize = segmentInfo.file.size >= 0 ? segmentInfo.file.size : 0;
-
-          if (!downloadSize) {
-            segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
-          }
-
-          // TODO: use a completed property instead
-
-          finished(segmentInfo.stream)
-            .catch(() => undefined)
-            .then(() => {
-
-              const duration = segmentInfo.segment?.entry.duration ?? 0;
-
-              totalDuration += duration;
-
-              console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
-            });
-        });
-      },
-      problem(err) {
-
-        console.error('PROBLEM', err);
-      }
-    });
-  }
-  catch (err) {
-    console.error('FAILED', err);
-    process.exit(1);
-  }
-
-  console.error('stream complete');
+    console.error('stream complete');
 })();

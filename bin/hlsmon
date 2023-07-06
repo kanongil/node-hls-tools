@@ -5,26 +5,26 @@
 
 const hlsmon = require('commander');
 hlsmon.version('0.0.0')
-  .usage('[options] <url>')
-  //.option('-a', '--user-agent <string>', 'User-Agent')
-  .parse(process.argv);
+    .usage('[options] <url>')
+    //.option('-a', '--user-agent <string>', 'User-Agent')
+    .parse(process.argv);
 
 const src = hlsmon.args[0];
 if (!src) {
-  hlsmon.help();
-  process.exit(-1);
+    hlsmon.help();
+    process.exit(-1);
 }
 
 (async () => {
 
-  try {
-    const { monitor } = await import('../lib/hlsmon.mjs');
+    try {
+        const { monitor } = await import('../lib/hlsmon.mjs');
 
-    await monitor(src, hlsmon.opts());
-  }
-  catch (err) {
-    return console.error('FAILED', err);
-  }
+        await monitor(src, hlsmon.opts());
+    }
+    catch (err) {
+        return console.error('FAILED', err);
+    }
 
-  console.error('done');
+    console.error('done');
 })();
