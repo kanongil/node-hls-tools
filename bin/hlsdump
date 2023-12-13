@@ -139,6 +139,10 @@ if (!src) {
         });
     }
     catch (err) {
+        if (err.name === 'AbortError') {
+            process.exit(0);         // User requested the exit
+        }
+
         console.error('FAILED', err);
         process.exit(1);
     }
