@@ -25,10 +25,10 @@
   "license": "BSD-2-Clause",
   "dependencies": {
     "bl": "^6.0.1",
-    "commander": "^10.0.0",
+    "commander": "^11.1.0",
     "debug": "^4.1.1",
-    "hls-playlist-reader": "^3.0.4",
-    "hls-segment-reader": "^9.0.0-beta.4",
+    "hls-playlist-reader": "^4.0.0",
+    "hls-segment-reader": "^9.0.0-beta.5",
     "udp-blast": "^3.0.0",
     "uristream": "^6.3.2"
   },
@@ -37,6 +37,6 @@
     "readable-stream": "npm:@built-in/readable-stream@1"
   },
   "engines": {
-    "node": ">=16.17.0"
+    "node": ">=18.12.0"
   }
 }
