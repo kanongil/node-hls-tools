@@ -1,65 +1,30 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-process-exit */
 'use strict';
 
 const hlsmon = require('commander');
 hlsmon.version('0.0.0')
-   .usage('[options] <url>')
-   .option('-a', '--user-agent <string>', 'User-Agent')
-   .parse(process.argv);
+    .usage('[options] <url>')
+    //.option('-a', '--user-agent <string>', 'User-Agent')
+    .parse(process.argv);
 
-const Url = require('url');
+const src = hlsmon.args[0];
+if (!src) {
+    hlsmon.help();
+    process.exit(-1);
+}
 
-const HlsSegmentReader = require('hls-segment-reader');
+(async () => {
 
-const src = process.argv[2];
-const sep = ';';
+    try {
+        const { monitor } = await import('../lib/hlsmon.mjs');
 
-const monitor = function (srcUrl) {
-
-  const r = new HlsSegmentReader(srcUrl, { fullStream:true, withData:false });
-
-  const contentBytes = (segmentInfo) => {
-
-    if (segmentInfo.type === 'segment') {
-      return segmentInfo.segment.details.byterange ? +segmentInfo.segment.details.byterange.length : segmentInfo.file.size;
+        await monitor(src, hlsmon.opts());
     }
-
-    if (segmentInfo.type === 'init') {
-      return segmentInfo.init.byterange ? parseInt(segmentInfo.init.quotedString('byterange'), 10): segmentInfo.file.size;
-    }
-
-    return segmentInfo.file.size;
-  };
-
-  r.on('data', (segmentInfo) => {
-
-    const meta = segmentInfo.file;
-    const size = contentBytes(segmentInfo);
-    const duration = +(segmentInfo.segment && segmentInfo.segment.details.duration);
-    console.log(meta.modified.toJSON() + sep + size + sep + duration.toFixed(3) + sep + (size / (duration * 1024 / 8)).toFixed(3));
-  });
-
-  r.once('index', () => {
-
-    // wait until first index is returned before attaching error listener.
-    // this will enable initials errors to throw
-    r.on('error', (err) => {
-
-      console.error('reader error', err.stack || err);
-    });
-  });
-
-  r.on('end', () => {
-
-    if (r.index && r.index.master) {
-      const newUrl = Url.resolve(r.baseUrl, r.index.variants[0].uri);
-      console.error('found variant index, using: ', newUrl);
-      return monitor(newUrl);
+    catch (err) {
+        return console.error('FAILED', err);
     }
 
     console.error('done');
-  });
-};
-
-monitor(src);
+})();
