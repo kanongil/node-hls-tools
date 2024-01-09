@@ -27,10 +27,10 @@
     "bl": "^6.0.1",
     "commander": "^11.1.0",
     "debug": "^4.1.1",
-    "hls-playlist-reader": "^4.0.0",
-    "hls-segment-reader": "^9.0.0-beta.5",
+    "hls-playlist-reader": "^4.1.1",
+    "hls-segment-reader": "^9.0.0-beta.7",
     "udp-blast": "^3.0.0",
-    "uristream": "^6.3.2"
+    "uristream": "^7.0.2"
   },
   "overrides": {
     "buffer": "npm:@built-in/buffer@1",
