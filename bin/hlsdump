@@ -112,24 +112,24 @@ if (!src) {
                 let totalDuration = 0;
                 reader.on('segment', (/** @type {import("hls-segment-reader").HlsStreamerObject} */segmentInfo) => {
 
-                    let downloadSize = segmentInfo.file.size >= 0 ? segmentInfo.file.size : 0;
+                    if (segmentInfo.type === 'segment') {
+                        let downloadSize = segmentInfo.file.size >= 0 ? segmentInfo.file.size : 0;
 
-                    if (!downloadSize) {
-                        segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
-                    }
+                        if (!downloadSize) {
+                            segmentInfo.stream.on('data', (chunk) => downloadSize += chunk.byteLength);
+                        }
 
-                    // TODO: use a completed property instead
+                        segmentInfo.fetched
+                            .catch(() => undefined)
+                            .then(() => {
 
-                    finished(segmentInfo.stream)
-                        .catch(() => undefined)
-                        .then(() => {
+                                const duration = segmentInfo.segment?.entry.duration ?? 0;
 
-                            const duration = segmentInfo.segment?.entry.duration ?? 0;
+                                totalDuration += duration;
 
-                            totalDuration += duration;
-
-                            console.error('segment done at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
-                        });
+                                console.error('segment downloaded at ' + totalDuration.toFixed(0) + ' seconds, avg bitrate (kbps):', (downloadSize / (duration * 1024 / 8)).toFixed(1));
+                            });
+                        }
                 });
             },
             problem(err) {
